@@ -17,7 +17,8 @@ const Hero = () => {
     'Freelancer',
     'Gamer',
     'Coffee Addict ☕',
-    'Bug Hunter 🐛'
+    'Bug Hunter 🐛',
+    'Hakuna Matata 🦁'
   ];
 
   useEffect(() => {
