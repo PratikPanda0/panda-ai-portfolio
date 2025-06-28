@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -86,8 +85,24 @@ const BlogEditor = () => {
         tags: tags.map(t => t.tag).join(', '),
       });
 
-      setContent(blog.content || []);
+      // Fix: Properly handle the content type conversion
+      if (blog.content && Array.isArray(blog.content)) {
+        setContent(blog.content);
+      } else if (blog.content) {
+        // If content exists but isn't an array, try to convert it
+        try {
+          const parsedContent = typeof blog.content === 'string' 
+            ? JSON.parse(blog.content) 
+            : blog.content;
+          setContent(Array.isArray(parsedContent) ? parsedContent : []);
+        } catch {
+          setContent([]);
+        }
+      } else {
+        setContent([]);
+      }
     } catch (error) {
+      console.error('Error loading blog post:', error);
       toast({
         title: 'Error loading blog post',
         description: 'Failed to load the blog post for editing',
@@ -158,6 +173,7 @@ const BlogEditor = () => {
 
       navigate('/admin');
     } catch (error) {
+      console.error('Error saving blog:', error);
       toast({
         title: 'Error saving blog',
         description: 'Failed to save the blog post',

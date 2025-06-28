@@ -42,19 +42,29 @@ const Admin = () => {
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
-      // For now, we'll use a simple check against the database
-      // In production, you'd want proper password hashing and JWT tokens
+      console.log('Attempting login with:', values.email);
+      
+      // Check if admin user exists with this email
       const { data, error } = await supabase
         .from('admin_users')
         .select('id, email')
         .eq('email', values.email)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) {
+      console.log('Database query result:', { data, error });
+
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error('Database connection error');
+      }
+
+      if (!data) {
+        console.log('No admin user found with this email');
         throw new Error('Invalid credentials');
       }
 
       // For demo purposes, we'll accept the default password
+      // In production, you'd want proper password hashing comparison
       if (values.password === 'admin123') {
         localStorage.setItem('admin_token', 'admin_logged_in');
         setIsLoggedIn(true);
@@ -63,12 +73,14 @@ const Admin = () => {
           description: 'Welcome to the admin panel',
         });
       } else {
+        console.log('Password mismatch');
         throw new Error('Invalid credentials');
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: 'Login failed',
-        description: 'Invalid email or password',
+        description: error instanceof Error ? error.message : 'Invalid email or password',
         variant: 'destructive',
       });
     } finally {
