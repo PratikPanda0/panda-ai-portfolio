@@ -25,6 +25,7 @@ const Header = () => {
     { href: '#skills', label: 'Skills' },
     { href: '#experience', label: 'Experience' },
     { href: '#projects', label: 'Projects' },
+    { href: '/blog', label: 'Blog', isRoute: true },
     { href: '#contact', label: 'Contact' }
   ];
 
@@ -33,6 +34,14 @@ const Header = () => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
       setIsMenuOpen(false);
+    }
+  };
+
+  const handleNavClick = (item: typeof navItems[0]) => {
+    if (item.isRoute) {
+      window.location.href = item.href;
+    } else {
+      scrollToSection(item.href);
     }
   };
 
@@ -51,7 +60,7 @@ const Header = () => {
             {navItems.map((item) => (
               <button
                 key={item.href}
-                onClick={() => scrollToSection(item.href)}
+                onClick={() => handleNavClick(item)}
                 className="text-sm font-medium hover:text-dev-primary transition-colors duration-200 font-mono"
               >
                 {item.label}
@@ -88,7 +97,7 @@ const Header = () => {
               {navItems.map((item) => (
                 <button
                   key={item.href}
-                  onClick={() => scrollToSection(item.href)}
+                  onClick={() => handleNavClick(item)}
                   className="text-left py-2 font-mono text-sm hover:text-dev-primary transition-colors duration-200"
                 >
                   {item.label}

@@ -7,30 +7,46 @@ const Hero = () => {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showCursor, setShowCursor] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const texts = [
     'Assistant Manager',
     'AI Engineer', 
     'Full-Stack Developer',
-    'GenAI Specialist'
+    'GenAI Specialist',
+    'Freelancer',
+    'Gamer',
+    'Coffee Addict ☕',
+    'Bug Hunter 🐛'
   ];
 
   useEffect(() => {
     const currentText = texts[currentIndex];
     
-    if (displayText.length < currentText.length) {
+    if (!isDeleting && displayText.length < currentText.length) {
+      // Typing effect
       const timeout = setTimeout(() => {
         setDisplayText(currentText.slice(0, displayText.length + 1));
       }, 100);
       return () => clearTimeout(timeout);
-    } else {
+    } else if (!isDeleting && displayText.length === currentText.length) {
+      // Pause before deleting
       const timeout = setTimeout(() => {
-        setDisplayText('');
-        setCurrentIndex((prev) => (prev + 1) % texts.length);
+        setIsDeleting(true);
       }, 2000);
       return () => clearTimeout(timeout);
+    } else if (isDeleting && displayText.length > 0) {
+      // Deleting effect
+      const timeout = setTimeout(() => {
+        setDisplayText(currentText.slice(0, displayText.length - 1));
+      }, 50);
+      return () => clearTimeout(timeout);
+    } else if (isDeleting && displayText.length === 0) {
+      // Move to next text
+      setIsDeleting(false);
+      setCurrentIndex((prev) => (prev + 1) % texts.length);
     }
-  }, [displayText, currentIndex, texts]);
+  }, [displayText, currentIndex, isDeleting, texts]);
 
   useEffect(() => {
     const interval = setInterval(() => {
