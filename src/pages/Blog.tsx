@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Filter, ArrowLeft, Calendar, Clock, ArrowUpDown } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock blog data with proper image URLs
 const blogPosts = [
@@ -71,7 +72,68 @@ const Blog = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedTag, setSelectedTag] = useState('All');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [filteredPosts, setFilteredPosts] = useState(blogPosts);
+  const [blogPosts, setBlogPosts] = useState<any[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>(['All']);
+  const [allTags, setAllTags] = useState<string[]>(['All']);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchBlogPosts();
+  }, []);
+
+  const fetchBlogPosts = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch blogs with their tags
+      const { data: blogs, error: blogsError } = await supabase
+        .from('blogs')
+        .select(`
+          *,
+          blog_tags (tag)
+        `)
+        .order('date', { ascending: false });
+
+      if (blogsError) throw blogsError;
+
+      // Transform the data to match the expected format
+      const transformedBlogs = blogs?.map(blog => ({
+        id: blog.id,
+        title: blog.title,
+        excerpt: blog.excerpt,
+        content: blog.content,
+        image: blog.image_url || "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&h=400&fit=crop",
+        category: blog.category,
+        date: blog.date,
+        readTime: blog.read_time,
+        tags: blog.blog_tags?.map((tag: any) => tag.tag) || [],
+        author: blog.author
+      })) || [];
+
+      setBlogPosts(transformedBlogs);
+
+      // Extract unique categories and tags
+      const uniqueCategories = ['All', ...Array.from(new Set(transformedBlogs.map(post => post.category)))];
+      const allTagsSet = new Set(['All']);
+      transformedBlogs.forEach(post => {
+        post.tags.forEach((tag: string) => allTagsSet.add(tag));
+      });
+
+      setCategories(uniqueCategories);
+      setAllTags(Array.from(allTagsSet));
+    } catch (error) {
+      console.error('Error fetching blog posts:', error);
+      toast({
+        title: 'Error loading blog posts',
+        description: 'Failed to load blog posts. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     let filtered = [...blogPosts];
@@ -91,7 +153,7 @@ const Blog = () => {
       filtered = filtered.filter(post =>
         post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        post.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -103,11 +165,28 @@ const Blog = () => {
     });
 
     setFilteredPosts(filtered);
-  }, [searchTerm, selectedCategory, selectedTag, sortOrder]);
+  }, [searchTerm, selectedCategory, selectedTag, sortOrder, blogPosts]);
 
   const toggleSortOrder = () => {
     setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Header />
+        <main className="pt-20">
+          <div className="container-custom mx-auto px-4 py-16">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold mb-4 gradient-text">Loading...</h1>
+              <p className="text-muted-foreground">Fetching the latest blog posts...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -168,7 +247,7 @@ const Blog = () => {
                     <SelectValue placeholder="Filter by tag" />
                   </SelectTrigger>
                   <SelectContent>
-                    {getAllTags().map((tag) => (
+                    {allTags.map((tag) => (
                       <SelectItem key={tag} value={tag}>
                         {tag}
                       </SelectItem>
@@ -233,7 +312,7 @@ const Blog = () => {
                     </div>
                     
                     <div className="flex flex-wrap gap-1">
-                      {post.tags.slice(0, 3).map((tag) => (
+                      {post.tags.slice(0, 3).map((tag: string) => (
                         <Badge key={tag} variant="outline" className="text-xs">
                           {tag}
                         </Badge>

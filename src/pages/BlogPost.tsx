@@ -1,128 +1,132 @@
 
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, User } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-
-// Mock blog data (in a real app, this would come from an API)
-const blogPosts = [
-  {
-    id: 1,
-    title: "Getting Started with Generative AI in Enterprise Applications",
-    excerpt: "Exploring how to integrate AI-powered features into business applications using modern frameworks and cloud services.",
-    content: `
-      <h2>Introduction</h2>
-      <p>Generative AI is revolutionizing how we build enterprise applications. In this comprehensive guide, we'll explore the practical aspects of integrating AI-powered features into business applications.</p>
-      
-      <h2>Key Considerations</h2>
-      <p>When implementing generative AI in enterprise environments, several factors need careful consideration:</p>
-      <ul>
-        <li>Data privacy and security</li>
-        <li>Scalability requirements</li>
-        <li>Integration with existing systems</li>
-        <li>Cost optimization</li>
-      </ul>
-      
-      <h2>Implementation Strategy</h2>
-      <p>A successful AI integration requires a well-planned approach. Start with pilot projects to understand the technology's capabilities and limitations in your specific context.</p>
-      
-      <h2>Best Practices</h2>
-      <p>Here are some proven best practices for implementing generative AI:</p>
-      <ol>
-        <li>Start with clear use cases</li>
-        <li>Ensure data quality</li>
-        <li>Monitor performance continuously</li>
-        <li>Plan for regular model updates</li>
-      </ol>
-      
-      <h2>Conclusion</h2>
-      <p>Generative AI offers tremendous opportunities for enterprise applications. With careful planning and implementation, organizations can unlock significant value while maintaining security and compliance standards.</p>
-    `,
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop",
-    category: "AI",
-    date: "2024-01-15",
-    readTime: "8 min read",
-    tags: ["AI", "Enterprise", "Cloud", "Machine Learning", "Business Intelligence"],
-    author: "Pratik Kumar Panda"
-  },
-  {
-    id: 2,
-    title: "Building Scalable React Applications with TypeScript",
-    excerpt: "Best practices for structuring large-scale React applications with TypeScript for better maintainability.",
-    content: `
-      <h2>Why TypeScript for React?</h2>
-      <p>TypeScript brings static typing to JavaScript, making React applications more robust and maintainable. This is especially important in large-scale applications where code complexity can quickly become overwhelming.</p>
-      
-      <h2>Project Structure</h2>
-      <p>A well-organized project structure is crucial for scalability:</p>
-      <ul>
-        <li>Feature-based folder organization</li>
-        <li>Shared components and utilities</li>
-        <li>Clear separation of concerns</li>
-      </ul>
-      
-      <h2>Type Safety Best Practices</h2>
-      <p>Leveraging TypeScript's type system effectively requires following certain patterns and practices that ensure both safety and developer experience.</p>
-      
-      <h2>Performance Considerations</h2>
-      <p>Large applications need careful attention to performance. We'll cover lazy loading, code splitting, and other optimization techniques.</p>
-    `,
-    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=400&fit=crop",
-    category: "Development",
-    date: "2024-01-10",
-    readTime: "12 min read",
-    tags: ["React", "TypeScript", "Architecture", "Frontend", "JavaScript"],
-    author: "Pratik Kumar Panda"
-  },
-  {
-    id: 3,
-    title: "Azure DevOps: Streamlining CI/CD Pipelines",
-    excerpt: "How to set up efficient continuous integration and deployment pipelines using Azure DevOps services.",
-    content: `
-      <h2>Setting Up Your Pipeline</h2>
-      <p>Azure DevOps provides comprehensive tools for building, testing, and deploying applications. Let's explore how to create efficient CI/CD pipelines.</p>
-      
-      <h2>Pipeline Configuration</h2>
-      <p>YAML-based pipeline configuration offers flexibility and version control for your deployment processes.</p>
-      
-      <h2>Best Practices</h2>
-      <p>Follow these guidelines for optimal pipeline performance and reliability.</p>
-    `,
-    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=400&fit=crop",
-    category: "DevOps",
-    date: "2024-01-05",
-    readTime: "10 min read",
-    tags: ["Azure", "DevOps", "CI/CD", "Automation", "Deployment"],
-    author: "Pratik Kumar Panda"
-  },
-  {
-    id: 4,
-    title: "The Future of Web Development: Trends to Watch in 2024",
-    excerpt: "Analyzing emerging technologies and frameworks that are shaping the future of web development.",
-    content: `
-      <h2>Emerging Technologies</h2>
-      <p>The web development landscape continues to evolve rapidly. Here are the key trends shaping 2024 and beyond.</p>
-      
-      <h2>Framework Evolution</h2>
-      <p>Modern frameworks are becoming more powerful and developer-friendly, enabling faster development cycles.</p>
-      
-      <h2>The AI Revolution</h2>
-      <p>AI-powered development tools are changing how we write, test, and deploy code.</p>
-    `,
-    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&h=400&fit=crop",
-    category: "Technology",
-    date: "2024-01-01",
-    readTime: "6 min read",
-    tags: ["Web Development", "Trends", "Future", "Innovation", "Technology"],
-    author: "Pratik Kumar Panda"
-  }
-];
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const BlogPost = () => {
   const { id } = useParams();
-  const post = blogPosts.find(p => p.id === parseInt(id || '0'));
+  const [post, setPost] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (id) {
+      fetchBlogPost(id);
+    }
+  }, [id]);
+
+  const fetchBlogPost = async (blogId: string) => {
+    try {
+      setIsLoading(true);
+      
+      const { data: blog, error: blogError } = await supabase
+        .from('blogs')
+        .select(`
+          *,
+          blog_tags (tag)
+        `)
+        .eq('id', blogId)
+        .single();
+
+      if (blogError) throw blogError;
+
+      if (blog) {
+        const transformedPost = {
+          id: blog.id,
+          title: blog.title,
+          excerpt: blog.excerpt,
+          content: blog.content,
+          image: blog.image_url || "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&h=400&fit=crop",
+          category: blog.category,
+          date: blog.date,
+          readTime: blog.read_time,
+          tags: blog.blog_tags?.map((tag: any) => tag.tag) || [],
+          author: blog.author
+        };
+        
+        setPost(transformedPost);
+      }
+    } catch (error) {
+      console.error('Error fetching blog post:', error);
+      toast({
+        title: 'Error loading blog post',
+        description: 'Failed to load the blog post. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderContent = (content: any[]) => {
+    if (!Array.isArray(content)) return null;
+
+    return content.map((block, index) => {
+      switch (block.type) {
+        case 'heading':
+          const HeadingTag = `h${block.level}` as keyof JSX.IntrinsicElements;
+          return (
+            <HeadingTag key={index} className="gradient-text font-bold mt-8 mb-4">
+              {block.content}
+            </HeadingTag>
+          );
+        
+        case 'quote':
+          return (
+            <blockquote key={index} className="border-l-4 border-dev-primary pl-6 my-6 italic text-lg">
+              {block.content}
+            </blockquote>
+          );
+        
+        case 'code':
+          return (
+            <pre key={index} className="bg-black text-green-400 p-4 rounded-lg my-6 overflow-x-auto">
+              <code>{block.content}</code>
+            </pre>
+          );
+        
+        case 'list':
+          const items = block.content.split('\n').filter((item: string) => item.trim());
+          return (
+            <ul key={index} className="list-disc list-inside space-y-2 my-6">
+              {items.map((item: string, itemIndex: number) => (
+                <li key={itemIndex}>{item.trim()}</li>
+              ))}
+            </ul>
+          );
+        
+        default:
+          return (
+            <p key={index} className="mb-4 leading-relaxed">
+              {block.content}
+            </p>
+          );
+      }
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Header />
+        <main className="pt-20">
+          <div className="container-custom mx-auto px-4 py-16">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold mb-4">Loading...</h1>
+              <p className="text-muted-foreground">Fetching blog post...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -145,7 +149,6 @@ const BlogPost = () => {
       <Header />
       
       <main className="pt-20">
-        {/* Article Header */}
         <article className="py-12 px-4">
           <div className="container-custom mx-auto max-w-4xl">
             {/* Navigation */}
@@ -200,16 +203,19 @@ const BlogPost = () => {
             </div>
 
             {/* Article Content */}
-            <div 
-              className="prose prose-lg max-w-none dark:prose-invert prose-headings:gradient-text prose-a:text-dev-primary hover:prose-a:text-dev-primary/80"
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
+            <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:gradient-text prose-a:text-dev-primary hover:prose-a:text-dev-primary/80">
+              {post.content && Array.isArray(post.content) ? (
+                renderContent(post.content)
+              ) : (
+                <p>Content not available</p>
+              )}
+            </div>
 
             {/* Tags */}
             <div className="mt-12 pt-8 border-t">
               <h3 className="text-lg font-semibold mb-4">Tags</h3>
               <div className="flex flex-wrap gap-2">
-                {post.tags.map((tag) => (
+                {post.tags.map((tag: string) => (
                   <Badge key={tag} variant="outline">
                     {tag}
                   </Badge>
