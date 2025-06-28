@@ -5,71 +5,85 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, ArrowLeft, Calendar, Clock } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Filter, ArrowLeft, Calendar, Clock, ArrowUpDown } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-// Mock blog data
+// Mock blog data with proper image URLs
 const blogPosts = [
   {
     id: 1,
     title: "Getting Started with Generative AI in Enterprise Applications",
     excerpt: "Exploring how to integrate AI-powered features into business applications using modern frameworks and cloud services.",
     content: "Full blog content would go here...",
-    image: "/placeholder.svg",
+    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop",
     category: "AI",
     date: "2024-01-15",
     readTime: "8 min read",
-    tags: ["AI", "Enterprise", "Cloud"]
+    tags: ["AI", "Enterprise", "Cloud", "Machine Learning", "Business Intelligence"]
   },
   {
     id: 2,
     title: "Building Scalable React Applications with TypeScript",
     excerpt: "Best practices for structuring large-scale React applications with TypeScript for better maintainability.",
     content: "Full blog content would go here...",
-    image: "/placeholder.svg",
+    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=400&fit=crop",
     category: "Development",
     date: "2024-01-10",
     readTime: "12 min read",
-    tags: ["React", "TypeScript", "Architecture"]
+    tags: ["React", "TypeScript", "Architecture", "Frontend", "JavaScript"]
   },
   {
     id: 3,
     title: "Azure DevOps: Streamlining CI/CD Pipelines",
     excerpt: "How to set up efficient continuous integration and deployment pipelines using Azure DevOps services.",
     content: "Full blog content would go here...",
-    image: "/placeholder.svg",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=400&fit=crop",
     category: "DevOps",
     date: "2024-01-05",
     readTime: "10 min read",
-    tags: ["Azure", "DevOps", "CI/CD"]
+    tags: ["Azure", "DevOps", "CI/CD", "Automation", "Deployment"]
   },
   {
     id: 4,
     title: "The Future of Web Development: Trends to Watch in 2024",
     excerpt: "Analyzing emerging technologies and frameworks that are shaping the future of web development.",
     content: "Full blog content would go here...",
-    image: "/placeholder.svg",
+    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&h=400&fit=crop",
     category: "Technology",
     date: "2024-01-01",
     readTime: "6 min read",
-    tags: ["Web Development", "Trends", "Future"]
+    tags: ["Web Development", "Trends", "Future", "Innovation", "Technology"]
   }
 ];
 
 const categories = ["All", "AI", "Development", "DevOps", "Technology"];
 
+// Get all unique tags from blog posts
+const getAllTags = () => {
+  const allTags = blogPosts.flatMap(post => post.tags);
+  return ["All", ...Array.from(new Set(allTags))];
+};
+
 const Blog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedTag, setSelectedTag] = useState('All');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filteredPosts, setFilteredPosts] = useState(blogPosts);
 
   useEffect(() => {
-    let filtered = blogPosts;
+    let filtered = [...blogPosts];
 
     // Filter by category
     if (selectedCategory !== 'All') {
       filtered = filtered.filter(post => post.category === selectedCategory);
+    }
+
+    // Filter by tag
+    if (selectedTag !== 'All') {
+      filtered = filtered.filter(post => post.tags.includes(selectedTag));
     }
 
     // Filter by search term
@@ -81,8 +95,19 @@ const Blog = () => {
       );
     }
 
+    // Sort by date
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+
     setFilteredPosts(filtered);
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, selectedTag, sortOrder]);
+
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -117,20 +142,49 @@ const Blog = () => {
                 />
               </div>
 
-              {/* Category Filter */}
-              <div className="flex flex-wrap justify-center gap-2 mb-12">
-                {categories.map((category) => (
-                  <Button
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedCategory(category)}
-                    className="text-xs"
-                  >
-                    <Filter className="h-3 w-3 mr-1" />
-                    {category}
-                  </Button>
-                ))}
+              {/* Filters */}
+              <div className="flex flex-wrap justify-center gap-4 mb-8">
+                {/* Category Filter */}
+                <div className="flex flex-wrap justify-center gap-2">
+                  {categories.map((category) => (
+                    <Button
+                      key={category}
+                      variant={selectedCategory === category ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory(category)}
+                      className="text-xs"
+                    >
+                      <Filter className="h-3 w-3 mr-1" />
+                      {category}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tag Filter and Date Sort */}
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-12">
+                <Select value={selectedTag} onValueChange={setSelectedTag}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Filter by tag" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAllTags().map((tag) => (
+                      <SelectItem key={tag} value={tag}>
+                        {tag}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleSortOrder}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowUpDown className="h-4 w-4" />
+                  Date {sortOrder === 'desc' ? 'Newest' : 'Oldest'}
+                </Button>
               </div>
             </div>
           </div>
@@ -147,6 +201,10 @@ const Blog = () => {
                       src={post.image}
                       alt={post.title}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg";
+                      }}
                     />
                   </div>
                   
@@ -175,11 +233,16 @@ const Blog = () => {
                     </div>
                     
                     <div className="flex flex-wrap gap-1">
-                      {post.tags.map((tag) => (
+                      {post.tags.slice(0, 3).map((tag) => (
                         <Badge key={tag} variant="outline" className="text-xs">
                           {tag}
                         </Badge>
                       ))}
+                      {post.tags.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{post.tags.length - 3}
+                        </Badge>
+                      )}
                     </div>
                   </CardContent>
 

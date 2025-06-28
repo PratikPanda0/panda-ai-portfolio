@@ -40,11 +40,11 @@ const blogPosts = [
       <h2>Conclusion</h2>
       <p>Generative AI offers tremendous opportunities for enterprise applications. With careful planning and implementation, organizations can unlock significant value while maintaining security and compliance standards.</p>
     `,
-    image: "/placeholder.svg",
+    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop",
     category: "AI",
     date: "2024-01-15",
     readTime: "8 min read",
-    tags: ["AI", "Enterprise", "Cloud"],
+    tags: ["AI", "Enterprise", "Cloud", "Machine Learning", "Business Intelligence"],
     author: "Pratik Kumar Panda"
   },
   {
@@ -69,11 +69,11 @@ const blogPosts = [
       <h2>Performance Considerations</h2>
       <p>Large applications need careful attention to performance. We'll cover lazy loading, code splitting, and other optimization techniques.</p>
     `,
-    image: "/placeholder.svg",
+    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=400&fit=crop",
     category: "Development",
     date: "2024-01-10",
     readTime: "12 min read",
-    tags: ["React", "TypeScript", "Architecture"],
+    tags: ["React", "TypeScript", "Architecture", "Frontend", "JavaScript"],
     author: "Pratik Kumar Panda"
   },
   {
@@ -90,11 +90,11 @@ const blogPosts = [
       <h2>Best Practices</h2>
       <p>Follow these guidelines for optimal pipeline performance and reliability.</p>
     `,
-    image: "/placeholder.svg",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=400&fit=crop",
     category: "DevOps",
     date: "2024-01-05",
     readTime: "10 min read",
-    tags: ["Azure", "DevOps", "CI/CD"],
+    tags: ["Azure", "DevOps", "CI/CD", "Automation", "Deployment"],
     author: "Pratik Kumar Panda"
   },
   {
@@ -111,11 +111,11 @@ const blogPosts = [
       <h2>The AI Revolution</h2>
       <p>AI-powered development tools are changing how we write, test, and deploy code.</p>
     `,
-    image: "/placeholder.svg",
+    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&h=400&fit=crop",
     category: "Technology",
     date: "2024-01-01",
     readTime: "6 min read",
-    tags: ["Web Development", "Trends", "Future"],
+    tags: ["Web Development", "Trends", "Future", "Innovation", "Technology"],
     author: "Pratik Kumar Panda"
   }
 ];
@@ -192,6 +192,10 @@ const BlogPost = () => {
                 src={post.image}
                 alt={post.title}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/placeholder.svg";
+                }}
               />
             </div>
 
