@@ -46,7 +46,7 @@ const Hero = () => {
       setIsDeleting(false);
       setCurrentIndex((prev) => (prev + 1) % texts.length);
     }
-  }, [displayText, currentIndex, isDeleting, texts]);
+  }, [displayText, currentIndex, isDeleting]);
 
   useEffect(() => {
     const interval = setInterval(() => {
