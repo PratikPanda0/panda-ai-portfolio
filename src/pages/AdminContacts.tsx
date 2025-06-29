@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -94,7 +93,7 @@ const AdminContacts = () => {
             : 'pending'
       }));
 
-      setMessages(data || []);
+      setMessages(cleaned);
     } catch (error) {
       console.error('Error fetching contact messages:', error);
       toast({
