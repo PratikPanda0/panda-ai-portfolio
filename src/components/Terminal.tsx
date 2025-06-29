@@ -213,7 +213,7 @@ ${resumeData.description}`,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl h-[85vh] p-0 bg-black text-green-400 font-mono border-2 border-green-400/30">
+      <DialogContent className="max-w-5xl h-[35vh] p-0 bg-black text-green-400 font-mono border-2 border-green-400/30">
         <DialogTitle className="sr-only">Interactive Terminal</DialogTitle>
         
         {/* Terminal Header */}
