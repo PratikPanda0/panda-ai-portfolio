@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Lock, User } from 'lucide-react';
+import { Lock, User, Mail } from 'lucide-react';
 import { createAdminUser } from '@/utils/createAdminUser';
 
 const loginSchema = z.object({
@@ -159,7 +158,7 @@ const Admin = () => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle>Blog Management</CardTitle>
@@ -187,6 +186,23 @@ const Admin = () => {
                   variant="outline"
                 >
                   Manage Posts
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Messages</CardTitle>
+                <CardDescription>View and manage contact form submissions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => navigate('/admin/contacts')}
+                  className="w-full"
+                  variant="secondary"
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  View Messages
                 </Button>
               </CardContent>
             </Card>
