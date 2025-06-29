@@ -5,10 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Search, Filter, Mail, MailOpen, Archive, Reply } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Mail, MailOpen, Archive, Reply, Eye, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
+import ContactReplyDialog from '@/components/ContactReplyDialog';
 
 interface ContactMessage {
   id: string;
@@ -21,6 +23,14 @@ interface ContactMessage {
   reply_status: 'pending' | 'replied' | 'archived';
 }
 
+interface ContactReply {
+  id: string;
+  reply_content: any[];
+  reply_html: string;
+  sent_at: string;
+  sent_by: string | null;
+}
+
 const AdminContacts = () => {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<ContactMessage[]>([]);
@@ -28,6 +38,10 @@ const AdminContacts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'replied' | 'archived'>('all');
   const [readFilter, setReadFilter] = useState<'all' | 'read' | 'unread'>('all');
+  const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
+  const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [messageReplies, setMessageReplies] = useState<ContactReply[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -106,6 +120,27 @@ const AdminContacts = () => {
     }
   };
 
+  const fetchMessageReplies = async (messageId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('contact_replies')
+        .select('*')
+        .eq('contact_message_id', messageId)
+        .order('sent_at', { ascending: true });
+
+      if (error) throw error;
+
+      setMessageReplies(data || []);
+    } catch (error) {
+      console.error('Error fetching replies:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch replies',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const updateMessageStatus = async (id: string, updates: Partial<ContactMessage>) => {
     try {
       const { error } = await supabase
@@ -158,6 +193,68 @@ const AdminContacts = () => {
         {status}
       </Badge>
     );
+  };
+
+  const handleViewMessage = async (message: ContactMessage) => {
+    setSelectedMessage(message);
+    await fetchMessageReplies(message.id);
+    setIsViewDialogOpen(true);
+    
+    // Mark as read if not already read
+    if (!message.is_read) {
+      markAsRead(message.id);
+    }
+  };
+
+  const handleReplyMessage = (message: ContactMessage) => {
+    setSelectedMessage(message);
+    setIsReplyDialogOpen(true);
+    
+    // Mark as read if not already read
+    if (!message.is_read) {
+      markAsRead(message.id);
+    }
+  };
+
+  const handleReplySuccess = () => {
+    fetchMessages(); // Refresh the messages list
+  };
+
+  const renderReplyContent = (content: any[]) => {
+    return content.map((block, index) => {
+      switch (block.type) {
+        case 'heading':
+          const HeadingTag = `h${block.level}` as keyof JSX.IntrinsicElements;
+          return (
+            <HeadingTag key={index} className={`font-bold ${block.level === 1 ? 'text-2xl' : block.level === 2 ? 'text-xl' : 'text-lg'} mb-2`}>
+              {block.content}
+            </HeadingTag>
+          );
+        case 'quote':
+          return (
+            <blockquote key={index} className="border-l-4 border-dev-primary pl-4 italic mb-4">
+              {block.content}
+            </blockquote>
+          );
+        case 'code':
+          return (
+            <pre key={index} className="bg-black text-green-400 p-3 rounded text-sm overflow-x-auto mb-4">
+              <code>{block.content}</code>
+            </pre>
+          );
+        case 'list':
+          const items = block.content.split('\n').filter((item: string) => item.trim());
+          return (
+            <ul key={index} className="list-disc list-inside space-y-1 mb-4">
+              {items.map((item: string, itemIndex: number) => (
+                <li key={itemIndex}>{item.trim()}</li>
+              ))}
+            </ul>
+          );
+        default:
+          return <p key={index} className="mb-4">{block.content}</p>;
+      }
+    });
   };
 
   if (isLoading) {
@@ -278,6 +375,24 @@ const AdminContacts = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleViewMessage(message)}
+                          title="View message"
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                        
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleReplyMessage(message)}
+                          title="Reply to message"
+                        >
+                          <Reply className="h-3 w-3" />
+                        </Button>
+                        
                         {!message.is_read ? (
                           <Button
                             size="sm"
@@ -295,17 +410,6 @@ const AdminContacts = () => {
                             title="Mark as unread"
                           >
                             <Mail className="h-3 w-3" />
-                          </Button>
-                        )}
-                        
-                        {message.reply_status === 'pending' && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => updateReplyStatus(message.id, 'replied')}
-                            title="Mark as replied"
-                          >
-                            <Reply className="h-3 w-3" />
                           </Button>
                         )}
                         
@@ -331,6 +435,98 @@ const AdminContacts = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* View Message Dialog */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Contact Message Details</DialogTitle>
+            </DialogHeader>
+            
+            {selectedMessage && (
+              <div className="space-y-6">
+                {/* Message Details */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <strong>Name:</strong> {selectedMessage.name}
+                    </div>
+                    <div>
+                      <strong>Email:</strong> {selectedMessage.email}
+                    </div>
+                  </div>
+                  <div>
+                    <strong>Subject:</strong> {selectedMessage.subject}
+                  </div>
+                  <div>
+                    <strong>Date:</strong> {format(new Date(selectedMessage.created_at), 'MMM dd, yyyy HH:mm')}
+                  </div>
+                  <div>
+                    <strong>Status:</strong> {getStatusBadge(selectedMessage.reply_status)}
+                  </div>
+                </div>
+
+                {/* Original Message */}
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold mb-2">Message:</h4>
+                  <p>{selectedMessage.message}</p>
+                </div>
+
+                {/* Replies */}
+                {messageReplies.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Replies ({messageReplies.length})
+                    </h4>
+                    {messageReplies.map((reply) => (
+                      <div key={reply.id} className="p-4 bg-dev-primary/5 rounded-lg border">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-medium text-sm">Admin Reply</span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(reply.sent_at), 'MMM dd, yyyy HH:mm')}
+                          </span>
+                        </div>
+                        <div className="prose prose-sm max-w-none">
+                          {renderReplyContent(reply.reply_content)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsViewDialogOpen(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setIsViewDialogOpen(false);
+                      handleReplyMessage(selectedMessage);
+                    }}
+                  >
+                    <Reply className="h-4 w-4 mr-2" />
+                    Reply
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Reply Dialog */}
+        {selectedMessage && (
+          <ContactReplyDialog
+            isOpen={isReplyDialogOpen}
+            onClose={() => setIsReplyDialogOpen(false)}
+            message={selectedMessage}
+            onReplySuccess={handleReplySuccess}
+          />
+        )}
       </div>
     </div>
   );
