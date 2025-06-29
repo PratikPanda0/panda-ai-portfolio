@@ -78,15 +78,21 @@ const AdminContacts = () => {
 
       if (error) throw error;
 
-      const cleaned = (data || []).map((msg) => ({
-      ...msg,
-      reply_status: 
-        msg.reply_status === 'pending' || 
-        msg.reply_status === 'replied' || 
-        msg.reply_status === 'archived'
-          ? msg.reply_status
-          : 'pending'
-    })) as ContactMessage[];
+      const cleaned: ContactMessage[] = (data || []).map((msg): ContactMessage => ({
+        id: msg.id,
+        name: msg.name,
+        email: msg.email,
+        subject: msg.subject,
+        message: msg.message,
+        created_at: msg.created_at,
+        is_read: msg.is_read,
+        reply_status: 
+          msg.reply_status === 'pending' || 
+          msg.reply_status === 'replied' || 
+          msg.reply_status === 'archived'
+            ? msg.reply_status
+            : 'pending'
+      }));
 
       setMessages(data || []);
     } catch (error) {
