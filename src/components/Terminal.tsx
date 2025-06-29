@@ -240,7 +240,7 @@ ${resumeData.description}`,
         </div>
 
         {/* Terminal Content */}
-        <div className="flex flex-col h-full bg-gradient-to-b from-black to-green-950/10">
+        <div className="flex flex-col h-full bg-gradient-to-b from-black to-green-950/10" style={{maxHeight: "50rem"}}>
           {/* History */}
           <div 
             ref={historyRef}
