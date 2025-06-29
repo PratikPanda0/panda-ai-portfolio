@@ -19,7 +19,7 @@ export const createAdminUser = async () => {
 
     if (existingUser) {
       console.log('Admin user already exists:', existingUser);
-      return { success: true, message: 'Admin user already exists' };
+      return { success: true, message: 'Admin user already exists', user: existingUser };
     }
 
     // Create admin user
@@ -40,7 +40,7 @@ export const createAdminUser = async () => {
     }
 
     console.log('Admin user created successfully:', data);
-    return { success: true, data };
+    return { success: true, data, message: 'Admin user created successfully' };
   } catch (error) {
     console.error('Unexpected error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
