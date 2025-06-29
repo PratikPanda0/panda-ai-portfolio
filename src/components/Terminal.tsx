@@ -182,6 +182,35 @@ ${resumeData.description}`,
     }
   }, [history]);
 
+  // Custom scrollbar styles
+  const scrollbarStyles = `
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.3);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(34, 197, 94, 0.5);
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(34, 197, 94, 0.7);
+    }
+  `;
+
+  useEffect(() => {
+    // Add styles to document head
+    const styleElement = document.createElement('style');
+    styleElement.textContent = scrollbarStyles;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      // Clean up styles when component unmounts
+      document.head.removeChild(styleElement);
+    };
+  }, []);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl h-[85vh] p-0 bg-black text-green-400 font-mono border-2 border-green-400/30">
@@ -259,22 +288,6 @@ ${resumeData.description}`,
             </div>
           </div>
         </div>
-
-        <style jsx>{`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.3);
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(34, 197, 94, 0.5);
-            border-radius: 4px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(34, 197, 94, 0.7);
-          }
-        `}</style>
       </DialogContent>
     </Dialog>
   );
