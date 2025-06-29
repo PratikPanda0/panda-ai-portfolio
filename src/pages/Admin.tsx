@@ -11,6 +11,7 @@ import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Lock, User } from 'lucide-react';
+import { createAdminUser } from '@/utils/createAdminUser';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -20,6 +21,7 @@ const loginSchema = z.object({
 const Admin = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -32,12 +34,39 @@ const Admin = () => {
   });
 
   useEffect(() => {
-    // Check if admin is already logged in
-    const adminToken = localStorage.getItem('admin_token');
-    if (adminToken) {
-      setIsLoggedIn(true);
-    }
-  }, []);
+    const initializeAdmin = async () => {
+      try {
+        // Check if admin is already logged in
+        const adminToken = localStorage.getItem('admin_token');
+        if (adminToken) {
+          setIsLoggedIn(true);
+          setIsInitializing(false);
+          return;
+        }
+
+        // Ensure admin user exists
+        console.log('Initializing admin user...');
+        const result = await createAdminUser();
+        
+        if (result.success) {
+          console.log('Admin initialization complete');
+        } else {
+          console.error('Failed to initialize admin user:', result.error);
+          toast({
+            title: 'Initialization Error',
+            description: 'Failed to initialize admin user. Please try again.',
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        console.error('Admin initialization error:', error);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initializeAdmin();
+  }, [toast]);
 
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
@@ -107,6 +136,17 @@ const Admin = () => {
       description: 'You have been logged out successfully',
     });
   };
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dev-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Initializing admin system...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoggedIn) {
     return (
