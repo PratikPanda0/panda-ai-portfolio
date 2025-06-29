@@ -217,7 +217,7 @@ ${resumeData.description}`,
         <DialogTitle className="sr-only">Interactive Terminal</DialogTitle>
         
         {/* Terminal Header */}
-        <div className="flex items-center justify-between p-4 border-b border-green-400/30 bg-gradient-to-r from-green-900/20 to-green-800/20style={{maxHeight: '5rem'}}">
+        <div className="flex items-center justify-between p-4 border-b border-green-400/30 bg-gradient-to-r from-green-900/20 to-green-800/20" style={{maxHeight: "5rem"}}>
           <div className="flex items-center space-x-3">
             <div className="flex space-x-2">
               <div className="w-3 h-3 bg-red-500 rounded-full shadow-lg"></div>
