@@ -22,7 +22,7 @@ import {
   AlignCenter,
   AlignRight,
   Strikethrough,
-  Highlight
+  Highlighter
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -118,7 +118,7 @@ const AdvancedRichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
     { icon: Italic, label: 'Italic', action: () => formatText('italic') },
     { icon: Underline, label: 'Underline', action: () => formatText('underline') },
     { icon: Strikethrough, label: 'Strike', action: () => formatText('strikethrough') },
-    { icon: Highlight, label: 'Highlight', action: () => formatText('highlight') },
+    { icon: Highlighter, label: 'Highlight', action: () => formatText('highlight') },
     { icon: Code, label: 'Inline Code', action: () => formatText('code') },
   ];
 
