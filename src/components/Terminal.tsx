@@ -231,12 +231,12 @@ ${resumeData.description}`,
               <span className="text-green-300">$</span>
             </div>
           </div>
-          <button
+          {/* <button
             onClick={onClose}
             className="text-green-400 hover:text-green-300 transition-colors p-1 rounded hover:bg-green-900/30"
           >
             <X className="h-5 w-5" />
-          </button>
+          </button> */}
         </div>
 
         {/* Terminal Content */}
