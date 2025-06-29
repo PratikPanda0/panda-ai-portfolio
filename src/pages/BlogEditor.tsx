@@ -12,7 +12,7 @@ import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
-import RichTextEditor from '@/components/RichTextEditor';
+import AdvancedRichTextEditor from '@/components/AdvancedRichTextEditor';
 
 const blogSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -85,11 +85,9 @@ const BlogEditor = () => {
         tags: tags.map(t => t.tag).join(', '),
       });
 
-      // Fix: Properly handle the content type conversion
       if (blog.content && Array.isArray(blog.content)) {
         setContent(blog.content);
       } else if (blog.content) {
-        // If content exists but isn't an array, try to convert it
         try {
           const parsedContent = typeof blog.content === 'string' 
             ? JSON.parse(blog.content) 
@@ -127,7 +125,6 @@ const BlogEditor = () => {
       let blogId;
 
       if (id) {
-        // Update existing blog
         const { error } = await supabase
           .from('blogs')
           .update(blogData)
@@ -136,13 +133,11 @@ const BlogEditor = () => {
         if (error) throw error;
         blogId = id;
 
-        // Delete existing tags
         await supabase
           .from('blog_tags')
           .delete()
           .eq('blog_id', id);
       } else {
-        // Create new blog
         const { data, error } = await supabase
           .from('blogs')
           .insert(blogData)
@@ -153,7 +148,6 @@ const BlogEditor = () => {
         blogId = data.id;
       }
 
-      // Insert tags
       const tags = values.tags.split(',').map(tag => tag.trim()).filter(Boolean);
       if (tags.length > 0) {
         const tagData = tags.map(tag => ({
@@ -171,7 +165,7 @@ const BlogEditor = () => {
         description: `Blog post has been ${id ? 'updated' : 'created'} successfully`,
       });
 
-      navigate('/admin');
+      navigate('/admin/blog-list');
     } catch (error) {
       console.error('Error saving blog:', error);
       toast({
@@ -184,6 +178,85 @@ const BlogEditor = () => {
     }
   };
 
+  const renderPreviewContent = () => {
+    return content.map((block, index) => {
+      switch (block.type) {
+        case 'heading':
+          const HeadingTag = `h${block.level}` as keyof JSX.IntrinsicElements;
+          return (
+            <HeadingTag key={index} className={`font-bold mb-4 ${
+              block.level === 1 ? 'text-3xl' : 
+              block.level === 2 ? 'text-2xl' : 'text-xl'
+            }`}>
+              <div dangerouslySetInnerHTML={{ __html: block.content }} />
+            </HeadingTag>
+          );
+        case 'quote':
+          return (
+            <blockquote key={index} className="border-l-4 border-dev-primary pl-4 italic my-4">
+              <div dangerouslySetInnerHTML={{ __html: block.content }} />
+            </blockquote>
+          );
+        case 'code':
+          return (
+            <pre key={index} className="bg-black text-green-400 p-4 rounded my-4 overflow-x-auto">
+              <code>{block.content}</code>
+            </pre>
+          );
+        case 'list':
+          const items = block.content.split('\n').filter((item: string) => item.trim());
+          return (
+            <ul key={index} className="list-disc list-inside my-4 space-y-1">
+              {items.map((item: string, itemIndex: number) => (
+                <li key={itemIndex} dangerouslySetInnerHTML={{ __html: item.trim() }} />
+              ))}
+            </ul>
+          );
+        case 'ordered-list':
+          const orderedItems = block.content.split('\n').filter((item: string) => item.trim());
+          return (
+            <ol key={index} className="list-decimal list-inside my-4 space-y-1">
+              {orderedItems.map((item: string, itemIndex: number) => (
+                <li key={itemIndex} dangerouslySetInnerHTML={{ __html: item.trim() }} />
+              ))}
+            </ol>
+          );
+        case 'link':
+          return (
+            <p key={index} className="my-4">
+              <a 
+                href={block.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                {block.content}
+              </a>
+            </p>
+          );
+        case 'image':
+          return (
+            <div key={index} className="my-4">
+              <img 
+                src={block.url} 
+                alt={block.content} 
+                className="max-w-full h-auto rounded"
+              />
+              {block.content && (
+                <p className="text-sm text-muted-foreground mt-2">{block.content}</p>
+              )}
+            </div>
+          );
+        default:
+          return (
+            <p key={index} className="my-4">
+              <div dangerouslySetInnerHTML={{ __html: block.content }} />
+            </p>
+          );
+      }
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground p-4">
       <div className="container mx-auto max-w-4xl">
@@ -191,11 +264,11 @@ const BlogEditor = () => {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              onClick={() => navigate('/admin')}
+              onClick={() => navigate('/admin/blog-list')}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
+              Back to Blog List
             </Button>
             <h1 className="text-2xl font-bold">
               {id ? 'Edit Blog Post' : 'Create New Blog Post'}
@@ -217,6 +290,7 @@ const BlogEditor = () => {
         {!isPreview ? (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -322,7 +396,7 @@ const BlogEditor = () => {
 
               <div>
                 <label className="text-sm font-medium mb-2 block">Content</label>
-                <RichTextEditor content={content} onChange={setContent} />
+                <AdvancedRichTextEditor content={content} onChange={setContent} />
               </div>
 
               <div className="flex justify-end">
@@ -340,13 +414,10 @@ const BlogEditor = () => {
             </CardHeader>
             <CardContent>
               <div className="prose max-w-none">
-                <h1>{form.watch('title')}</h1>
-                <p className="text-muted-foreground">{form.watch('excerpt')}</p>
-                <div className="mt-4">
-                  {/* Render rich text content preview here */}
-                  <p className="text-sm text-muted-foreground">
-                    Rich text content preview will be rendered here
-                  </p>
+                <h1 className="text-3xl font-bold mb-4">{form.watch('title')}</h1>
+                <p className="text-muted-foreground mb-6">{form.watch('excerpt')}</p>
+                <div className="space-y-4">
+                  {renderPreviewContent()}
                 </div>
               </div>
             </CardContent>

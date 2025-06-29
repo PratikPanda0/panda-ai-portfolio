@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { X } from 'lucide-react';
 
 interface TerminalProps {
   isOpen: boolean;
@@ -100,10 +99,9 @@ ${resumeData.description}`,
     const trimmedCmd = cmd.trim();
     if (!trimmedCmd) return;
 
-    // Add to command history
     setCommandHistory(prev => {
       const newHistory = [...prev, trimmedCmd];
-      return newHistory.slice(-50); // Keep last 50 commands
+      return newHistory.slice(-50);
     });
     setHistoryIndex(-1);
 
@@ -182,92 +180,59 @@ ${resumeData.description}`,
     }
   }, [history]);
 
-  // Custom scrollbar styles
-  const scrollbarStyles = `
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 8px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.3);
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(34, 197, 94, 0.5);
-      border-radius: 4px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: rgba(34, 197, 94, 0.7);
-    }
-  `;
-
-  useEffect(() => {
-    // Add styles to document head
-    const styleElement = document.createElement('style');
-    styleElement.textContent = scrollbarStyles;
-    document.head.appendChild(styleElement);
-
-    return () => {
-      // Clean up styles when component unmounts
-      document.head.removeChild(styleElement);
-    };
-  }, []);
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl h-[35vh] p-0 bg-black text-green-400 font-mono border-2 border-green-400/30">
+      <DialogContent className="max-w-6xl h-[80vh] p-0 bg-black text-green-400 font-mono border-2 border-green-400/30 m-4">
         <DialogTitle className="sr-only">Interactive Terminal</DialogTitle>
         
-        {/* Terminal Header */}
-        <div className="flex items-center justify-between p-4 border-b border-green-400/30 bg-gradient-to-r from-green-900/20 to-green-800/20" style={{maxHeight: "5rem"}}>
-          <div className="flex items-center space-x-3">
-            <div className="flex space-x-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full shadow-lg"></div>
-              <div className="w-3 h-3 bg-yellow-500 rounded-full shadow-lg"></div>
-              <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg"></div>
-            </div>
-            <div className="flex items-center space-x-2 ml-4">
-              <span className="text-green-300 font-bold">pratik@terminal</span>
-              <span className="text-green-500">:</span>
-              <span className="text-blue-400">~</span>
-              <span className="text-green-300">$</span>
-            </div>
-          </div>
-          {/* <button
-            onClick={onClose}
-            className="text-green-400 hover:text-green-300 transition-colors p-1 rounded hover:bg-green-900/30"
-          >
-            <X className="h-5 w-5" />
-          </button> */}
-        </div>
-
-        {/* Terminal Content */}
-        <div className="flex flex-col h-full bg-gradient-to-b from-black to-green-950/10" style={{maxHeight: "50rem"}}>
-          {/* History */}
-          <div 
-            ref={historyRef}
-            className="flex-1 p-4 overflow-y-auto space-y-2 text-sm custom-scrollbar"
-          >
-            {history.map((cmd, index) => (
-              <div key={index} className="space-y-1">
-                {cmd.input && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-green-300/70 text-xs">[{cmd.timestamp}]</span>
-                    <span className="text-green-300 font-bold">pratik@terminal</span>
-                    <span className="text-green-500">:</span>
-                    <span className="text-blue-400">~</span>
-                    <span className="text-green-300">$</span>
-                    <span className="text-white font-medium">{cmd.input}</span>
-                  </div>
-                )}
-                <div className="whitespace-pre-wrap text-green-400 ml-2 pl-4 border-l border-green-800/50">
-                  {cmd.output}
-                </div>
+        {/* Container with proper spacing */}
+        <div className="flex flex-col h-full gap-2 p-4">
+          {/* Terminal Header - 20% */}
+          <div className="flex items-center justify-between p-3 border border-green-400/30 bg-gradient-to-r from-green-900/20 to-green-800/20 rounded-md h-[20%] min-h-[60px]">
+            <div className="flex items-center space-x-3">
+              <div className="flex space-x-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full shadow-lg"></div>
+                <div className="w-3 h-3 bg-yellow-500 rounded-full shadow-lg"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg"></div>
               </div>
-            ))}
+              <div className="flex items-center space-x-2 ml-4">
+                <span className="text-green-300 font-bold">pratik@terminal</span>
+                <span className="text-green-500">:</span>
+                <span className="text-blue-400">~</span>
+                <span className="text-green-300">$</span>
+              </div>
+            </div>
           </div>
 
-          {/* Input */}
-          <div className="border-t border-green-400/30 p-4 bg-gradient-to-r from-green-950/20 to-black">
-            <form onSubmit={handleSubmit} className="flex items-center space-x-2">
+          {/* Terminal Body - 60% */}
+          <div className="flex-1 border border-green-400/30 bg-gradient-to-b from-black to-green-950/10 rounded-md overflow-hidden">
+            <div 
+              ref={historyRef}
+              className="h-full p-4 overflow-y-auto space-y-2 text-sm scrollbar-thin scrollbar-track-black scrollbar-thumb-green-400/50"
+            >
+              {history.map((cmd, index) => (
+                <div key={index} className="space-y-1">
+                  {cmd.input && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-300/70 text-xs">[{cmd.timestamp}]</span>
+                      <span className="text-green-300 font-bold">pratik@terminal</span>
+                      <span className="text-green-500">:</span>
+                      <span className="text-blue-400">~</span>
+                      <span className="text-green-300">$</span>
+                      <span className="text-white font-medium">{cmd.input}</span>
+                    </div>
+                  )}
+                  <div className="whitespace-pre-wrap text-green-400 ml-2 pl-4 border-l border-green-800/50">
+                    {cmd.output}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Input Section - 20% */}
+          <div className="border border-green-400/30 p-3 bg-gradient-to-r from-green-950/20 to-black rounded-md h-[20%] min-h-[80px]">
+            <form onSubmit={handleSubmit} className="flex items-center space-x-2 mb-2">
               <span className="text-green-300 font-bold">pratik@terminal</span>
               <span className="text-green-500">:</span>
               <span className="text-blue-400">~</span>
@@ -279,12 +244,12 @@ ${resumeData.description}`,
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="flex-1 bg-transparent text-white outline-none caret-green-400 font-medium"
-                placeholder="Type a command... (Use ↑↓ for history)"
+                placeholder="Type a command..."
                 autoComplete="off"
               />
             </form>
-            <div className="mt-2 text-xs text-green-500/70">
-              Use ↑↓ arrows for command history • Press Tab for suggestions • Type 'help' for commands
+            <div className="text-xs text-green-500/70">
+              Use ↑↓ arrows for history • Type 'help' for commands • Press ` to open terminal
             </div>
           </div>
         </div>
