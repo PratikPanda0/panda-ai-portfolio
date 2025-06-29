@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun, Menu, X } from 'lucide-react';
 
@@ -7,6 +8,8 @@ const Header = () => {
   const [isDark, setIsDark] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
@@ -39,9 +42,23 @@ const Header = () => {
 
   const handleNavClick = (item: typeof navItems[0]) => {
     if (item.isRoute) {
-      window.location.href = item.href;
+      // Navigate to blog page
+      navigate(item.href);
+      setIsMenuOpen(false);
     } else {
-      scrollToSection(item.href);
+      // Check if we're on the blog page and need to navigate to home first
+      if (location.pathname === '/blog' || location.pathname.startsWith('/blog/')) {
+        // Navigate to home page first, then scroll to section
+        navigate('/');
+        // Wait for navigation to complete, then scroll
+        setTimeout(() => {
+          scrollToSection(item.href);
+        }, 100);
+      } else {
+        // We're already on home page, just scroll
+        scrollToSection(item.href);
+      }
+      setIsMenuOpen(false);
     }
   };
 
@@ -51,9 +68,12 @@ const Header = () => {
     }`}>
       <div className="container-custom mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <div className="font-mono font-bold text-xl gradient-text">
+          <button
+            onClick={() => navigate('/')}
+            className="font-mono font-bold text-xl gradient-text hover:scale-105 transition-transform cursor-pointer"
+          >
             &lt;PratikPanda /&gt;
-          </div>
+          </button>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">

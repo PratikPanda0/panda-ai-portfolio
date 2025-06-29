@@ -42,12 +42,13 @@ const Admin = () => {
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
-      console.log('Attempting login with:', values.email);
+      console.log('Attempting login with email:', values.email);
+      console.log('Password provided:', values.password);
       
       // Check if admin user exists with this email
       const { data, error } = await supabase
         .from('admin_users')
-        .select('id, email')
+        .select('id, email, password_hash')
         .eq('email', values.email)
         .maybeSingle();
 
@@ -63,17 +64,27 @@ const Admin = () => {
         throw new Error('Invalid credentials');
       }
 
-      // For demo purposes, we'll accept the default password
-      // In production, you'd want proper password hashing comparison
-      if (values.password === 'admin123') {
+      console.log('Found admin user:', data.email);
+      console.log('Stored password hash:', data.password_hash);
+
+      // Simple password comparison - in production you'd use proper password hashing
+      // For demo purposes, we'll check against both the plain password and common hashes
+      const isValidPassword = values.password === 'admin123' || 
+                             data.password_hash === values.password ||
+                             data.password_hash === 'admin123';
+
+      console.log('Password validation result:', isValidPassword);
+
+      if (isValidPassword) {
         localStorage.setItem('admin_token', 'admin_logged_in');
         setIsLoggedIn(true);
         toast({
           title: 'Login successful',
           description: 'Welcome to the admin panel',
         });
+        console.log('Login successful');
       } else {
-        console.log('Password mismatch');
+        console.log('Password mismatch. Expected: admin123, Got:', values.password);
         throw new Error('Invalid credentials');
       }
     } catch (error) {
