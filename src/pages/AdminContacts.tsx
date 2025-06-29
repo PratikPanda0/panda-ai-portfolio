@@ -78,6 +78,16 @@ const AdminContacts = () => {
 
       if (error) throw error;
 
+      const cleaned = (data || []).map((msg) => ({
+      ...msg,
+      reply_status: 
+        msg.reply_status === 'pending' || 
+        msg.reply_status === 'replied' || 
+        msg.reply_status === 'archived'
+          ? msg.reply_status
+          : 'pending'
+    })) as ContactMessage[];
+
       setMessages(data || []);
     } catch (error) {
       console.error('Error fetching contact messages:', error);
