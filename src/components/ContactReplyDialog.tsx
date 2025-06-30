@@ -57,19 +57,29 @@ const ContactReplyDialog = ({ isOpen, onClose, message, onReplySuccess }: Contac
 
     setIsLoading(true);
     try {
+      console.log('Sending reply for message:', message.id);
+      console.log('Reply content:', replyContent);
+      
       const replyHtml = convertContentToHtml(replyContent);
       
       // Insert the reply into the database
-      const { error } = await supabase
+      const { data: replyData, error: replyError } = await supabase
         .from('contact_replies')
         .insert({
           contact_message_id: message.id,
           reply_content: replyContent,
           reply_html: replyHtml,
           sent_by: 'admin'
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (replyError) {
+        console.error('Error inserting reply:', replyError);
+        throw replyError;
+      }
+
+      console.log('Reply inserted successfully:', replyData);
 
       // Update the original message status to 'replied'
       const { error: updateError } = await supabase
@@ -77,7 +87,12 @@ const ContactReplyDialog = ({ isOpen, onClose, message, onReplySuccess }: Contac
         .update({ reply_status: 'replied' })
         .eq('id', message.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating message status:', updateError);
+        throw updateError;
+      }
+
+      console.log('Message status updated to replied');
 
       toast({
         title: 'Reply Sent',

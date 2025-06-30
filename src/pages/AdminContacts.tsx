@@ -86,14 +86,18 @@ const AdminContacts = () => {
 
   const fetchMessages = async () => {
     try {
+      console.log('Fetching contact messages...');
       const { data, error } = await supabase
         .from('contact_messages')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
+        console.error('Error fetching messages:', error);
         throw error;
       }
+
+      console.log('Fetched messages:', data);
 
       const cleaned: ContactMessage[] = (data || []).map((msg): ContactMessage => ({
         id: msg.id,
@@ -131,13 +135,19 @@ const AdminContacts = () => {
 
   const fetchMessageReplies = async (messageId: string) => {
     try {
+      console.log('Fetching replies for message:', messageId);
       const { data, error } = await supabase
         .from('contact_replies')
         .select('*')
         .eq('contact_message_id', messageId)
         .order('sent_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching replies:', error);
+        throw error;
+      }
+
+      console.log('Fetched replies:', data);
 
       // Transform the data to match our ContactReply interface
       const transformedReplies: ContactReply[] = (data || []).map(reply => ({
@@ -161,12 +171,16 @@ const AdminContacts = () => {
 
   const updateMessageStatus = async (id: string, updates: Partial<ContactMessage>) => {
     try {
+      console.log('Updating message status:', id, updates);
       const { error } = await supabase
         .from('contact_messages')
         .update(updates)
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating message:', error);
+        throw error;
+      }
 
       setMessages(prev => 
         prev.map(msg => 
@@ -235,6 +249,7 @@ const AdminContacts = () => {
   };
 
   const handleReplySuccess = () => {
+    console.log('Reply sent successfully, refreshing messages...');
     fetchMessages(); // Refresh the messages list
   };
 
