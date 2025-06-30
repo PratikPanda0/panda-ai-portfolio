@@ -130,7 +130,16 @@ const AdminContacts = () => {
 
       if (error) throw error;
 
-      setMessageReplies(data || []);
+      // Transform the data to match our ContactReply interface
+      const transformedReplies: ContactReply[] = (data || []).map(reply => ({
+        id: reply.id,
+        reply_content: Array.isArray(reply.reply_content) ? reply.reply_content : [],
+        reply_html: reply.reply_html,
+        sent_at: reply.sent_at,
+        sent_by: reply.sent_by
+      }));
+
+      setMessageReplies(transformedReplies);
     } catch (error) {
       console.error('Error fetching replies:', error);
       toast({
