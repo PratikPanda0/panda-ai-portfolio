@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -46,19 +47,14 @@ const AdminContacts = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log('AdminContacts: Component mounted');
-    
     // Check if user is logged in as admin
     const adminToken = localStorage.getItem('admin_token');
-    console.log('AdminContacts: Admin token check:', adminToken ? 'Found' : 'Not found');
     
     if (!adminToken) {
-      console.log('AdminContacts: No admin token, redirecting to admin login');
       navigate('/admin');
       return;
     }
 
-    console.log('AdminContacts: Admin token found, fetching messages');
     fetchMessages();
   }, [navigate]);
 
@@ -89,22 +85,15 @@ const AdminContacts = () => {
   }, [messages, searchTerm, statusFilter, readFilter]);
 
   const fetchMessages = async () => {
-    console.log('AdminContacts: Starting to fetch messages from database');
     try {
       const { data, error } = await supabase
         .from('contact_messages')
         .select('*')
         .order('created_at', { ascending: false });
 
-      console.log('AdminContacts: Supabase query result:', { data, error });
-
       if (error) {
-        console.error('AdminContacts: Supabase error:', error);
         throw error;
       }
-
-      console.log('AdminContacts: Raw data from database:', data);
-      console.log('AdminContacts: Number of messages received:', data?.length || 0);
 
       const cleaned: ContactMessage[] = (data || []).map((msg): ContactMessage => ({
         id: msg.id,
@@ -122,9 +111,6 @@ const AdminContacts = () => {
             : 'pending'
       }));
 
-      console.log('AdminContacts: Cleaned messages:', cleaned);
-      console.log('AdminContacts: Setting messages state with', cleaned.length, 'messages');
-      
       setMessages(cleaned);
       
       toast({
@@ -132,14 +118,13 @@ const AdminContacts = () => {
         description: `Found ${cleaned.length} contact messages`,
       });
     } catch (error) {
-      console.error('AdminContacts: Error fetching contact messages:', error);
+      console.error('Error fetching contact messages:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch contact messages. Check console for details.',
+        description: 'Failed to fetch contact messages. Please try again.',
         variant: 'destructive',
       });
     } finally {
-      console.log('AdminContacts: Setting loading to false');
       setIsLoading(false);
     }
   };
@@ -301,9 +286,6 @@ const AdminContacts = () => {
     );
   }
 
-  console.log('AdminContacts: Rendering with messages:', messages.length);
-  console.log('AdminContacts: Filtered messages:', filteredMessages.length);
-
   return (
     <div className="min-h-screen bg-background text-foreground p-4">
       <div className="container mx-auto max-w-7xl">
@@ -324,21 +306,6 @@ const AdminContacts = () => {
             {filteredMessages.length} of {messages.length} messages
           </div>
         </div>
-
-        {/* Debug Info */}
-        <Card className="mb-6 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-2">Debug Information:</h3>
-            <div className="space-y-1 text-sm">
-              <p>Total messages loaded: {messages.length}</p>
-              <p>Filtered messages: {filteredMessages.length}</p>
-              <p>Loading state: {isLoading ? 'true' : 'false'}</p>
-              <p>Search term: "{searchTerm}"</p>
-              <p>Status filter: {statusFilter}</p>
-              <p>Read filter: {readFilter}</p>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Filters */}
         <Card className="mb-6">
