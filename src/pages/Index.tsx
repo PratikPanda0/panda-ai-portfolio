@@ -58,7 +58,7 @@ const Index = () => {
       <Header />
       
       {/* Download Buttons - Fixed Position */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3" style={{bottom: "6.5rem"}}>
         <Button
           onClick={downloadResume}
           className="bg-dev-primary hover:bg-dev-primary/90 text-white shadow-lg hover:scale-105 transition-all duration-300"
