@@ -61,6 +61,7 @@ export const useDownloads = () => {
         flex-direction: column;
         border-radius: 10px;
         box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.2);
+        overflow: hidden;
       }
 
       .card[data-state="#about"] {
