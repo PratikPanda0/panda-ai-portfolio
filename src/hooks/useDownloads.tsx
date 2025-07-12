@@ -397,9 +397,9 @@ export const useDownloads = () => {
     <div class="card" data-state="#about">
       <div class="card-header">
         <div class="card-cover" style="background-image: url('https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=1812&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"></div>
-        <img class="card-avatar" src="https://images.unsplash.com/photo-1549068106-b024baf5062d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=934&q=80" alt="avatar" />
+        <img class="card-avatar" src="/me.jpg" alt="avatar" />
         <h1 class="card-fullname">Pratik Kumar Panda</h1>
-        <h2 class="card-jobtitle">Software Developer</h2>
+        <h2 class="card-jobtitle">Assistant Manager</h2>
       </div>
       <div class="card-main">
         <div class="card-section is-active" id="about">
