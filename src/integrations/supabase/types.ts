@@ -174,12 +174,33 @@ export type Database = {
           },
         ]
       }
+      visitor_counter: {
+        Row: {
+          count: number
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          count?: number
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          count?: number
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_visitor_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
