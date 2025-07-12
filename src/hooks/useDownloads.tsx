@@ -427,7 +427,7 @@ export const useDownloads = () => {
               </div>
               <div class="card-item" data-year="2021">
                 <div class="card-item-title">Junior Software Engineer at <span>Firstsource</span></div>
-                <div class="card-item-desc">Onboarding illustrations for App.</div>
+                <div class="card-item-desc">Built internal tools like Issue Management System and Escalation Platform. Ensured cross-system communication through REST APIs and web services.</div>
               </div>
             </div>
           </div>
