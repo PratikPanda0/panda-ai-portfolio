@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import BlogEditor from "./pages/BlogEditor";
 import BlogList from "./pages/BlogList";
 import AdminContacts from "./pages/AdminContacts";
+import Freelance from "./pages/Freelance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogPost />} />
+          <Route path="/freelance" element={<Freelance />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/blog-editor" element={<BlogEditor />} />
           <Route path="/admin/blog-editor/:id" element={<BlogEditor />} />

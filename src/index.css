@@ -149,6 +149,14 @@ All colors MUST be HSL.
   .container-custom {
     @apply max-w-6xl mx-auto;
   }
+
+  /* Line clamp utilities */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 /* Scrollbar styles */

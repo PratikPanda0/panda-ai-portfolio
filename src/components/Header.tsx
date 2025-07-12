@@ -28,6 +28,7 @@ const Header = () => {
     { href: '#skills', label: 'Skills' },
     { href: '#experience', label: 'Experience' },
     { href: '#projects', label: 'Projects' },
+    { href: '/freelance', label: 'Freelance', isRoute: true },
     { href: '/blog', label: 'Blog', isRoute: true },
     { href: '#contact', label: 'Contact' }
   ];
@@ -42,12 +43,12 @@ const Header = () => {
 
   const handleNavClick = (item: typeof navItems[0]) => {
     if (item.isRoute) {
-      // Navigate to blog page
+      // Navigate to the route page
       navigate(item.href);
       setIsMenuOpen(false);
     } else {
-      // Check if we're on the blog page and need to navigate to home first
-      if (location.pathname === '/blog' || location.pathname.startsWith('/blog/')) {
+      // Check if we're on a route page and need to navigate to home first
+      if (location.pathname !== '/') {
         // Navigate to home page first, then scroll to section
         navigate('/');
         // Wait for navigation to complete, then scroll
