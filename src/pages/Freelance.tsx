@@ -16,14 +16,6 @@ interface Project {
 }
 
 const Freelance = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.ProjName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.ProjDesc.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
   // Sample project data - you can update this with your actual projects
   const [projects] = useState<Project[]>([
     {
@@ -74,6 +66,14 @@ const Freelance = () => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredProjects = projects.filter(
+    (project) =>
+      project.ProjName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.ProjDesc.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
