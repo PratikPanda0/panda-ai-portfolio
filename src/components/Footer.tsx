@@ -1,8 +1,10 @@
 
-import { Github, Linkedin, Mail, Heart } from 'lucide-react';
+import { Github, Linkedin, Mail, Heart, Eye } from 'lucide-react';
+import { useVisitorCounter } from '@/hooks/useVisitorCounter';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const visitorCount = useVisitorCounter();
 
   const socialLinks = [
     {
@@ -74,6 +76,21 @@ const Footer = () => {
               <div className="text-dev-primary">{'};'}</div>
             </div>
           </div>
+        </div>
+
+        {/* Visitor Counter Section */}
+        <div className="mt-12 text-center">
+          <div className="inline-flex items-center gap-3 p-4 rounded-lg glass-effect border border-dev-primary/20">
+            <Eye className="h-5 w-5 text-dev-primary animate-pulse" />
+            <div className="font-mono text-sm">
+              <span className="text-muted-foreground">Visitor #</span>
+              <span className="text-dev-primary font-bold mx-1">{visitorCount.toLocaleString()}</span>
+              <span className="text-dev-accent">// Thanks for stopping by! 👋</span>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground/60 mt-2 font-mono">
+            // Every refresh counts a new visit - you're making me popular! 🚀
+          </p>
         </div>
 
         {/* Bottom bar */}
