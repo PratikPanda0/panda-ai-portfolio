@@ -50,6 +50,11 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Developer theme colors */
+    --dev-primary: 199 89% 48%;
+    --dev-secondary: 142 76% 36%;
+    --dev-accent: 271 91% 65%;
   }
 
   .dark {
@@ -89,6 +94,11 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Developer theme colors for dark mode */
+    --dev-primary: 199 89% 48%;
+    --dev-secondary: 142 76% 36%;
+    --dev-accent: 271 91% 65%;
   }
 }
 
@@ -113,7 +123,7 @@ All colors MUST be HSL.
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, hsl(var(--dev-primary)) 0%, hsl(var(--dev-accent)) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -134,7 +144,7 @@ All colors MUST be HSL.
   .typing-cursor::after {
     content: '|';
     animation: blink 1s infinite;
-    color: #0ea5e9;
+    color: hsl(var(--dev-primary));
   }
 
   .parallax {
@@ -159,6 +169,21 @@ All colors MUST be HSL.
   }
 }
 
+/* Custom keyframes for chatbot animations */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
 /* Scrollbar styles */
 ::-webkit-scrollbar {
   width: 8px;
@@ -169,12 +194,12 @@ All colors MUST be HSL.
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #0ea5e9;
+  background: hsl(var(--dev-primary));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0284c7;
+  background: hsl(var(--dev-primary) / 0.8);
 }
 
 /* Dark mode by default */
