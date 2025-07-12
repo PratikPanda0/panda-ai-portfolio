@@ -16,6 +16,14 @@ interface Project {
 }
 
 const Freelance = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredProjects = projects.filter(
+    (project) =>
+      project.ProjName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.ProjDesc.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
   // Sample project data - you can update this with your actual projects
   const [projects] = useState<Project[]>([
     {
@@ -85,12 +93,23 @@ const Freelance = () => {
             </p>
           </div>
 
+          {/* Search Bar */}
+          <div className="mb-10 flex justify-center">
+            <input
+              type="text"
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full max-w-md p-3 border border-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-dev-primary/40 transition"
+            />
+          </div>
+
           {/* Projects Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project, index) => (
+            {filteredProjects.map((project, index) => (
               <Card 
                 key={project.ProjID}
-                className="group hover:shadow-lg hover:shadow-dev-primary/20 transition-all duration-300 hover:-translate-y-2 glass-effect animate-fade-in h-full flex flex-col overflow-hidden"
+                className="className='w-full max-w-md p-3 glass-effect border border-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-dev-primary/40 transition'"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {/* Project Image */}
