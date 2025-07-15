@@ -10,12 +10,12 @@ const Hero = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const texts = [
-    'Assistant Manager',
-    'AI Engineer', 
-    'Full-Stack Developer',
-    'GenAI Specialist',
-    'Freelancer',
-    'Gamer',
+    'AI Engineer 🤖', 
+    'Assistant Manager 📋',
+    'Full-Stack Developer 💻',
+    'GenAI Specialist 🧠',
+    'Freelancer 💼',
+    'Gamer 🎮',
     'Coffee Addict ☕',
     'Bug Hunter 🐛',
     'Hakuna Matata 🦁'
