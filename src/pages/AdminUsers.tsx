@@ -166,13 +166,13 @@ const AdminUsers = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Assign role to the new user
+        // Assign role to the new user - using null for assigned_by since we don't have a proper admin user system
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
             user_id: authData.user.id,
             role: values.role,
-            assigned_by: 'admin' // Mock admin ID
+            assigned_by: null // Set to null instead of 'admin' since assigned_by expects UUID or null
           });
 
         console.log('Role assignment result:', { roleError });
