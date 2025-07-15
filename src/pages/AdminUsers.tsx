@@ -91,23 +91,36 @@ const AdminUsers = () => {
   const loadUsers = async () => {
     setIsLoading(true);
     try {
+      console.log('Starting to load users...');
+      
       // Get profiles first
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
 
-      if (profilesError) throw profilesError;
+      console.log('Profiles query result:', { profiles, profilesError });
+
+      if (profilesError) {
+        console.error('Profiles error:', profilesError);
+        throw profilesError;
+      }
 
       // Get all user roles
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
-      if (rolesError) throw rolesError;
+      console.log('User roles query result:', { userRoles, rolesError });
+
+      if (rolesError) {
+        console.error('Roles error:', rolesError);
+        throw rolesError;
+      }
 
       // Combine profiles with their roles and add mock active status and passwords
       const usersWithRoles: UserWithRole[] = profiles?.map(profile => {
         const roles = userRoles?.filter(role => role.user_id === profile.id).map(role => role.role) || [];
+        console.log(`Profile ${profile.id} has roles:`, roles);
         return {
           ...profile,
           roles,
@@ -116,6 +129,7 @@ const AdminUsers = () => {
         };
       }) || [];
 
+      console.log('Final users with roles:', usersWithRoles);
       setUsers(usersWithRoles);
     } catch (error) {
       console.error('Error loading users:', error);
@@ -132,6 +146,8 @@ const AdminUsers = () => {
   const onSubmit = async (values: UserFormData) => {
     setIsSubmitting(true);
     try {
+      console.log('Creating user with values:', values);
+      
       // Create user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
@@ -145,6 +161,8 @@ const AdminUsers = () => {
         }
       });
 
+      console.log('Auth signup result:', { authData, authError });
+
       if (authError) throw authError;
 
       if (authData.user) {
@@ -156,6 +174,8 @@ const AdminUsers = () => {
             role: values.role,
             assigned_by: 'admin' // Mock admin ID
           });
+
+        console.log('Role assignment result:', { roleError });
 
         if (roleError) throw roleError;
 
@@ -473,10 +493,10 @@ const AdminUsers = () => {
                           </TableCell>
                         </TableRow>
                       ))}
-                      {users.length === 0 && (
+                      {users.length === 0 && !isLoading && (
                         <TableRow>
                           <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                            No users found
+                            No users found. Debug info: Check console for database query results.
                           </TableCell>
                         </TableRow>
                       )}
