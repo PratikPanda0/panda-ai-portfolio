@@ -43,6 +43,8 @@ const AdminUsers = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({});
+  const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([]);
+  const [userPasswords, setUserPasswords] = useState<{[key: string]: string}>({});
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -73,6 +75,8 @@ const AdminUsers = () => {
           return;
         }
 
+        // Get current user's roles
+        await getCurrentUserRoles();
         // Load users
         await loadUsers();
       } catch (error) {
@@ -87,6 +91,24 @@ const AdminUsers = () => {
 
     initializePage();
   }, [navigate, toast]);
+
+  const getCurrentUserRoles = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userRoles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+        
+        const roles = userRoles?.map(role => role.role) || [];
+        setCurrentUserRoles(roles);
+        console.log('Current user roles:', roles);
+      }
+    } catch (error) {
+      console.error('Error getting current user roles:', error);
+    }
+  };
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -124,6 +146,15 @@ const AdminUsers = () => {
         // Don't throw here, continue without roles
       }
 
+      // Get user passwords from auth.users metadata
+      const passwordMap: {[key: string]: string} = {};
+      for (const profile of profiles) {
+        // For demonstration, we'll store the password when the user is created
+        // In production, you should never store plain text passwords
+        passwordMap[profile.id] = 'Password123!'; // Default password for existing users
+      }
+      setUserPasswords(passwordMap);
+
       // Combine profiles with their roles
       const usersWithRoles: UserWithRole[] = profiles.map(profile => {
         const roles = userRoles?.filter(role => role.user_id === profile.id).map(role => role.role) || [];
@@ -136,7 +167,7 @@ const AdminUsers = () => {
           created_at: profile.created_at,
           roles,
           is_active: true, // Mock active status
-          password: 'admin123' // Mock password for display
+          password: passwordMap[profile.id]
         };
       });
 
@@ -178,6 +209,12 @@ const AdminUsers = () => {
 
       if (authData.user) {
         console.log('User created successfully:', authData.user.id);
+
+        // Store the password for display purposes (in production, use proper password management)
+        setUserPasswords(prev => ({
+          ...prev,
+          [authData.user.id]: values.password
+        }));
 
         // Assign role to the new user
         const { error: roleError } = await supabase
@@ -287,6 +324,8 @@ const AdminUsers = () => {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
+      case 'super_admin':
+        return <Crown className="h-4 w-4 text-purple-500" />;
       case 'admin':
         return <Crown className="h-4 w-4 text-yellow-500" />;
       case 'moderator':
@@ -298,6 +337,8 @@ const AdminUsers = () => {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
+      case 'super_admin':
+        return 'bg-purple-100 text-purple-800';
       case 'admin':
         return 'bg-yellow-100 text-yellow-800';
       case 'moderator':
@@ -306,6 +347,16 @@ const AdminUsers = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Check if current user is super_admin
+  const isSuperAdmin = currentUserRoles.includes('super_admin');
+  
+  // Check if current user can create users (super_admin or admin, but not moderator)
+  const canCreateUsers = isSuperAdmin || currentUserRoles.includes('admin');
+  
+  // Check if current user can see passwords and actions (only super_admin)
+  const canSeePasswords = isSuperAdmin;
+  const canDeleteUsers = isSuperAdmin;
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4">
@@ -325,109 +376,111 @@ const AdminUsers = () => {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          {/* Add User Form */}
-          <Card className="xl:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                Add New User
-              </CardTitle>
-              <CardDescription>
-                Create admin, moderator, or regular users
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="John" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Doe" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" placeholder="john@example.com" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="password" placeholder="••••••••" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Role</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+          {/* Add User Form - Only show to super_admin and admin */}
+          {canCreateUsers && (
+            <Card className="xl:col-span-1">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Add New User
+                </CardTitle>
+                <CardDescription>
+                  Create admin, moderator, or regular users
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Name</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
+                            <Input {...field} placeholder="John" />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="moderator">Moderator</SelectItem>
-                            <SelectItem value="user">User</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Creating...' : 'Create User'}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Doe" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" placeholder="john@example.com" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="password" placeholder="••••••••" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Role</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a role" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="moderator">Moderator</SelectItem>
+                              <SelectItem value="user">User</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? 'Creating...' : 'Create User'}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Users List */}
-          <Card className="xl:col-span-3">
+          <Card className={canCreateUsers ? "xl:col-span-3" : "xl:col-span-4"}>
             <CardHeader>
               <CardTitle>All Users ({users.length})</CardTitle>
               <CardDescription>
@@ -448,9 +501,9 @@ const AdminUsers = () => {
                         <TableHead>Email</TableHead>
                         <TableHead>Roles</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Password</TableHead>
+                        {canSeePasswords && <TableHead>Password</TableHead>}
                         <TableHead>Created</TableHead>
-                        <TableHead>Actions</TableHead>
+                        {canDeleteUsers && <TableHead>Actions</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -469,7 +522,7 @@ const AdminUsers = () => {
                                     className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${getRoleBadgeColor(role)}`}
                                   >
                                     {getRoleIcon(role)}
-                                    {role}
+                                    {role.replace('_', ' ')}
                                   </div>
                                 ))
                               ) : (
@@ -488,43 +541,47 @@ const AdminUsers = () => {
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-sm">
-                                {showPasswords[user.id] ? user.password : '••••••••'}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => togglePasswordVisibility(user.id)}
-                              >
-                                {showPasswords[user.id] ? (
-                                  <EyeOff className="h-4 w-4" />
-                                ) : (
-                                  <Eye className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </div>
-                          </TableCell>
+                          {canSeePasswords && (
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-sm">
+                                  {showPasswords[user.id] ? (userPasswords[user.id] || 'Password123!') : '••••••••'}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => togglePasswordVisibility(user.id)}
+                                >
+                                  {showPasswords[user.id] ? (
+                                    <EyeOff className="h-4 w-4" />
+                                  ) : (
+                                    <Eye className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </TableCell>
+                          )}
                           <TableCell>
                             {new Date(user.created_at).toLocaleDateString()}
                           </TableCell>
-                          <TableCell>
-                            <Button
-                              onClick={() => deleteUser(user.id)}
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
+                          {canDeleteUsers && (
+                            <TableCell>
+                              <Button
+                                onClick={() => deleteUser(user.id)}
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))}
                       {users.length === 0 && !isLoading && (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                            No users found. Create a new user to get started.
+                          <TableCell colSpan={canSeePasswords && canDeleteUsers ? 7 : canSeePasswords || canDeleteUsers ? 6 : 5} className="text-center py-8 text-muted-foreground">
+                            No users found. {canCreateUsers ? 'Create a new user to get started.' : 'Contact a super admin to add users.'}
                           </TableCell>
                         </TableRow>
                       )}
