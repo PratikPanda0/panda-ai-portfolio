@@ -96,13 +96,20 @@ const AdminUsers = () => {
       // Get profiles first
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
 
       console.log('Profiles query result:', { profiles, profilesError });
 
       if (profilesError) {
         console.error('Profiles error:', profilesError);
         throw profilesError;
+      }
+
+      if (!profiles || profiles.length === 0) {
+        console.log('No profiles found');
+        setUsers([]);
+        return;
       }
 
       // Get all user roles
@@ -114,20 +121,24 @@ const AdminUsers = () => {
 
       if (rolesError) {
         console.error('Roles error:', rolesError);
-        throw rolesError;
+        // Don't throw here, continue without roles
       }
 
-      // Combine profiles with their roles and add mock active status and passwords
-      const usersWithRoles: UserWithRole[] = profiles?.map(profile => {
+      // Combine profiles with their roles
+      const usersWithRoles: UserWithRole[] = profiles.map(profile => {
         const roles = userRoles?.filter(role => role.user_id === profile.id).map(role => role.role) || [];
-        console.log(`Profile ${profile.id} has roles:`, roles);
+        console.log(`Profile ${profile.id} (${profile.email}) has roles:`, roles);
         return {
-          ...profile,
+          id: profile.id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          email: profile.email,
+          created_at: profile.created_at,
           roles,
-          is_active: true, // Mock active status - in real app this would come from database
-          password: 'admin123' // Mock password - in real app this would be handled securely
+          is_active: true, // Mock active status
+          password: 'admin123' // Mock password for display
         };
-      }) || [];
+      });
 
       console.log('Final users with roles:', usersWithRoles);
       setUsers(usersWithRoles);
@@ -166,18 +177,23 @@ const AdminUsers = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Assign role to the new user - using null for assigned_by since we don't have a proper admin user system
+        console.log('User created successfully:', authData.user.id);
+
+        // Assign role to the new user
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
             user_id: authData.user.id,
             role: values.role,
-            assigned_by: null // Set to null instead of 'admin' since assigned_by expects UUID or null
+            assigned_by: null
           });
 
         console.log('Role assignment result:', { roleError });
 
-        if (roleError) throw roleError;
+        if (roleError) {
+          console.error('Role assignment failed:', roleError);
+          throw roleError;
+        }
 
         toast({
           title: 'Success',
@@ -185,7 +201,11 @@ const AdminUsers = () => {
         });
 
         form.reset();
-        loadUsers();
+        
+        // Wait a bit for the trigger to create the profile, then reload
+        setTimeout(() => {
+          loadUsers();
+        }, 1000);
       }
     } catch (error) {
       console.error('Error creating user:', error);
@@ -201,8 +221,7 @@ const AdminUsers = () => {
 
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      // In a real app, you would update the user status in the database
-      // For now, we'll just update the local state
+      // Update local state
       setUsers(users.map(user => 
         user.id === userId 
           ? { ...user, is_active: !currentStatus }
@@ -227,12 +246,21 @@ const AdminUsers = () => {
     if (!confirm('Are you sure you want to delete this user?')) return;
 
     try {
-      const { error } = await supabase
+      // Delete user roles first
+      const { error: roleError } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId);
 
-      if (error) throw error;
+      if (roleError) throw roleError;
+
+      // Delete profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (profileError) throw profileError;
 
       toast({
         title: 'Success',
@@ -496,7 +524,7 @@ const AdminUsers = () => {
                       {users.length === 0 && !isLoading && (
                         <TableRow>
                           <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                            No users found. Debug info: Check console for database query results.
+                            No users found. Create a new user to get started.
                           </TableCell>
                         </TableRow>
                       )}
