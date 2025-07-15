@@ -88,20 +88,28 @@ const AdminUsers = () => {
   const loadUsers = async () => {
     setIsLoading(true);
     try {
-      // Get profiles with their roles
+      // Get profiles first
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles (role)
-        `);
+        .select('*');
 
       if (profilesError) throw profilesError;
 
-      const usersWithRoles = profiles?.map(profile => ({
-        ...profile,
-        roles: profile.user_roles?.map((ur: any) => ur.role) || []
-      })) || [];
+      // Get all user roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) throw rolesError;
+
+      // Combine profiles with their roles
+      const usersWithRoles: UserWithRole[] = profiles?.map(profile => {
+        const roles = userRoles?.filter(role => role.user_id === profile.id).map(role => role.role) || [];
+        return {
+          ...profile,
+          roles
+        };
+      }) || [];
 
       setUsers(usersWithRoles);
     } catch (error) {
