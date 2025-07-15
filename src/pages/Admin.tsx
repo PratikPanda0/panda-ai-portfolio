@@ -71,16 +71,55 @@ const Admin = () => {
     setIsLoading(true);
     try {
       console.log('Attempting login with email:', values.email);
-      console.log('Password provided:', values.password);
       
-      // Check if admin user exists with this email
+      // Method 1: Try to login with Supabase Auth (for newly created admin users)
+      try {
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: values.email,
+          password: values.password,
+        });
+
+        console.log('Supabase auth result:', { authData, authError });
+
+        if (!authError && authData.user) {
+          // Check if the authenticated user has admin role
+          const { data: userRoles, error: roleError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', authData.user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
+
+          console.log('User role check:', { userRoles, roleError });
+
+          if (userRoles && userRoles.role === 'admin') {
+            // User is authenticated and has admin role
+            localStorage.setItem('admin_token', 'admin_logged_in');
+            setIsLoggedIn(true);
+            toast({
+              title: 'Login successful',
+              description: 'Welcome to the admin panel',
+            });
+            console.log('Login successful via Supabase Auth');
+            return;
+          } else {
+            // User authenticated but doesn't have admin role
+            await supabase.auth.signOut();
+            throw new Error('Access denied: Admin privileges required');
+          }
+        }
+      } catch (supabaseError) {
+        console.log('Supabase auth failed, trying admin_users table:', supabaseError);
+      }
+
+      // Method 2: Check admin_users table (for hardcoded admin)
       const { data, error } = await supabase
         .from('admin_users')
         .select('id, email, password_hash')
         .eq('email', values.email)
         .maybeSingle();
 
-      console.log('Database query result:', { data, error });
+      console.log('Admin users table query result:', { data, error });
 
       if (error) {
         console.error('Database error:', error);
@@ -88,15 +127,13 @@ const Admin = () => {
       }
 
       if (!data) {
-        console.log('No admin user found with this email');
+        console.log('No admin user found with this email in either system');
         throw new Error('Invalid credentials');
       }
 
-      console.log('Found admin user:', data.email);
-      console.log('Stored password hash:', data.password_hash);
+      console.log('Found admin user in admin_users table:', data.email);
 
-      // Simple password comparison - in production you'd use proper password hashing
-      // For demo purposes, we'll check against both the plain password and common hashes
+      // Simple password comparison for hardcoded admin
       const isValidPassword = values.password === 'admin123' || 
                              data.password_hash === values.password ||
                              data.password_hash === 'admin123';
@@ -110,9 +147,9 @@ const Admin = () => {
           title: 'Login successful',
           description: 'Welcome to the admin panel',
         });
-        console.log('Login successful');
+        console.log('Login successful via admin_users table');
       } else {
-        console.log('Password mismatch. Expected: admin123, Got:', values.password);
+        console.log('Password mismatch for admin_users table');
         throw new Error('Invalid credentials');
       }
     } catch (error) {
@@ -129,6 +166,8 @@ const Admin = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
+    // Also sign out from Supabase Auth if logged in
+    supabase.auth.signOut();
     setIsLoggedIn(false);
     toast({
       title: 'Logged out',
@@ -302,7 +341,8 @@ const Admin = () => {
             <p className="text-sm text-muted-foreground">
               Demo credentials:<br />
               Email: admin@example.com<br />
-              Password: admin123
+              Password: admin123<br /><br />
+              Or use any admin user created through the user management system.
             </p>
           </div>
         </CardContent>
