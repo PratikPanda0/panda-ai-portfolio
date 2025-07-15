@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import BlogEditor from "./pages/BlogEditor";
 import BlogList from "./pages/BlogList";
 import AdminContacts from "./pages/AdminContacts";
+import AdminUsers from "./pages/AdminUsers";
 import Freelance from "./pages/Freelance";
 import NotFound from "./pages/NotFound";
 import Chatbot from "./components/Chatbot";
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/admin/blog-editor/:id" element={<BlogEditor />} />
           <Route path="/admin/blog-list" element={<BlogList />} />
           <Route path="/admin/contacts" element={<AdminContacts />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

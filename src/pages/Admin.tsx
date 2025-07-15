@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Lock, User, Mail } from 'lucide-react';
+import { Lock, User, Mail, Users } from 'lucide-react';
 import { createAdminUser } from '@/utils/createAdminUser';
 
 const loginSchema = z.object({
@@ -203,6 +203,23 @@ const Admin = () => {
                 >
                   <Mail className="mr-2 h-4 w-4" />
                   View Messages
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>Manage admins, moderators, and users</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => navigate('/admin/users')}
+                  className="w-full"
+                  variant="secondary"
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Manage Users
                 </Button>
               </CardContent>
             </Card>
