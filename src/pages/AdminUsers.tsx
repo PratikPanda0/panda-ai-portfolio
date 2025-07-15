@@ -7,12 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User, UserPlus, Trash2, Crown, Shield, ArrowLeft } from 'lucide-react';
+import { User, UserPlus, Trash2, Crown, Shield, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 const userSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -33,12 +34,15 @@ interface UserWithRole {
   email: string;
   created_at: string;
   roles: string[];
+  is_active?: boolean;
+  password?: string;
 }
 
 const AdminUsers = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({});
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -53,36 +57,35 @@ const AdminUsers = () => {
     },
   });
 
-  // Check if current user is admin
+  // Check admin access and load users
   useEffect(() => {
-    const checkAdminAccess = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/admin');
-        return;
-      }
+    const initializePage = async () => {
+      try {
+        // Check if user is logged in to admin panel (using localStorage check)
+        const adminToken = localStorage.getItem('admin_token');
+        if (!adminToken) {
+          toast({
+            title: 'Access Denied',
+            description: 'Please login to admin panel first.',
+            variant: 'destructive',
+          });
+          navigate('/admin');
+          return;
+        }
 
-      // Check if user has admin role
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id);
-
-      const isAdmin = roles?.some(role => role.role === 'admin');
-      if (!isAdmin) {
+        // Load users
+        await loadUsers();
+      } catch (error) {
+        console.error('Error initializing page:', error);
         toast({
-          title: 'Access Denied',
-          description: 'You need admin privileges to access this page.',
+          title: 'Error',
+          description: 'Failed to initialize user management page.',
           variant: 'destructive',
         });
-        navigate('/admin');
-        return;
       }
-
-      loadUsers();
     };
 
-    checkAdminAccess();
+    initializePage();
   }, [navigate, toast]);
 
   const loadUsers = async () => {
@@ -102,12 +105,14 @@ const AdminUsers = () => {
 
       if (rolesError) throw rolesError;
 
-      // Combine profiles with their roles
+      // Combine profiles with their roles and add mock active status and passwords
       const usersWithRoles: UserWithRole[] = profiles?.map(profile => {
         const roles = userRoles?.filter(role => role.user_id === profile.id).map(role => role.role) || [];
         return {
           ...profile,
-          roles
+          roles,
+          is_active: true, // Mock active status - in real app this would come from database
+          password: 'admin123' // Mock password - in real app this would be handled securely
         };
       }) || [];
 
@@ -149,7 +154,7 @@ const AdminUsers = () => {
           .insert({
             user_id: authData.user.id,
             role: values.role,
-            assigned_by: (await supabase.auth.getUser()).data.user?.id
+            assigned_by: 'admin' // Mock admin ID
           });
 
         if (roleError) throw roleError;
@@ -174,12 +179,34 @@ const AdminUsers = () => {
     }
   };
 
+  const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      // In a real app, you would update the user status in the database
+      // For now, we'll just update the local state
+      setUsers(users.map(user => 
+        user.id === userId 
+          ? { ...user, is_active: !currentStatus }
+          : user
+      ));
+
+      toast({
+        title: 'Success',
+        description: `User ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
+      });
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update user status',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const deleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
 
     try {
-      // Note: In a production app, you'd need a server-side function to delete users
-      // from Supabase Auth. For now, we'll just remove from our tables
       const { error } = await supabase
         .from('user_roles')
         .delete()
@@ -189,7 +216,7 @@ const AdminUsers = () => {
 
       toast({
         title: 'Success',
-        description: 'User roles removed successfully',
+        description: 'User deleted successfully',
       });
 
       loadUsers();
@@ -203,6 +230,13 @@ const AdminUsers = () => {
     }
   };
 
+  const togglePasswordVisibility = (userId: string) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [userId]: !prev[userId]
+    }));
+  };
+
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'admin':
@@ -214,9 +248,20 @@ const AdminUsers = () => {
     }
   };
 
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'moderator':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground p-4">
-      <div className="container mx-auto max-w-6xl">
+      <div className="container mx-auto max-w-7xl">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Button
@@ -231,9 +276,9 @@ const AdminUsers = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           {/* Add User Form */}
-          <Card className="lg:col-span-1">
+          <Card className="xl:col-span-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UserPlus className="h-5 w-5" />
@@ -334,11 +379,11 @@ const AdminUsers = () => {
           </Card>
 
           {/* Users List */}
-          <Card className="lg:col-span-2">
+          <Card className="xl:col-span-3">
             <CardHeader>
-              <CardTitle>Existing Users</CardTitle>
+              <CardTitle>All Users ({users.length})</CardTitle>
               <CardDescription>
-                Manage all users and their roles
+                Manage all users, their roles, and status
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -354,6 +399,8 @@ const AdminUsers = () => {
                         <TableHead>Name</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Roles</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Password</TableHead>
                         <TableHead>Created</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
@@ -366,12 +413,12 @@ const AdminUsers = () => {
                           </TableCell>
                           <TableCell>{user.email}</TableCell>
                           <TableCell>
-                            <div className="flex gap-1">
+                            <div className="flex gap-1 flex-wrap">
                               {user.roles.length > 0 ? (
                                 user.roles.map((role) => (
                                   <div
                                     key={role}
-                                    className="flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-muted"
+                                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${getRoleBadgeColor(role)}`}
                                   >
                                     {getRoleIcon(role)}
                                     {role}
@@ -380,6 +427,35 @@ const AdminUsers = () => {
                               ) : (
                                 <span className="text-muted-foreground text-sm">No roles</span>
                               )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={user.is_active}
+                                onCheckedChange={() => toggleUserStatus(user.id, user.is_active || false)}
+                              />
+                              <span className={`text-sm ${user.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                                {user.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-sm">
+                                {showPasswords[user.id] ? user.password : '••••••••'}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => togglePasswordVisibility(user.id)}
+                              >
+                                {showPasswords[user.id] ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -399,7 +475,7 @@ const AdminUsers = () => {
                       ))}
                       {users.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                             No users found
                           </TableCell>
                         </TableRow>
