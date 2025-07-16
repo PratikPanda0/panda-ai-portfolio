@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -413,6 +412,21 @@ const AdminUsers = () => {
   const canSeePasswords = isSuperAdmin;
   const canDeleteUsers = isSuperAdmin;
 
+  // Filter available roles based on current user's permissions
+  const getAvailableRoles = () => {
+    return roles.filter(role => {
+      // Only super_admin can create other super_admins
+      if (role.name === 'super_admin') {
+        return isSuperAdmin;
+      }
+      // Admin can create admin, moderator, and user roles
+      if (currentUserRoles.includes('admin')) {
+        return ['admin', 'moderator', 'user'].includes(role.name);
+      }
+      return true;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground p-4">
       <div className="container mx-auto max-w-7xl">
@@ -515,23 +529,11 @@ const AdminUsers = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {roles
-                                .filter(role => {
-                                  // Only super_admin can create other super_admins
-                                  if (role.name === 'super_admin') {
-                                    return isSuperAdmin;
-                                  }
-                                  // Admin can create admin, moderator, and user
-                                  if (currentUserRoles.includes('admin')) {
-                                    return ['admin', 'moderator', 'user'].includes(role.name);
-                                  }
-                                  return true;
-                                })
-                                .map(role => (
-                                  <SelectItem key={role.id} value={role.id}>
-                                    {role.name.replace('_', ' ')}
-                                  </SelectItem>
-                                ))}
+                              {getAvailableRoles().map(role => (
+                                <SelectItem key={role.id} value={role.id}>
+                                  {role.name.replace('_', ' ')}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
