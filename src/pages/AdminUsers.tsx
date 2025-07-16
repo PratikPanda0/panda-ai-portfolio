@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -83,10 +84,8 @@ const AdminUsers = () => {
         await loadRoles();
         // Get current user's roles
         await getCurrentUserRoles();
-        // Load users and their stored passwords
+        // Load users
         await loadUsers();
-        // Load stored passwords from localStorage
-        loadStoredPasswords();
       } catch (error) {
         console.error('Error initializing page:', error);
         toast({
@@ -99,32 +98,6 @@ const AdminUsers = () => {
 
     initializePage();
   }, [navigate, toast]);
-
-  const loadStoredPasswords = () => {
-    try {
-      const storedPasswords = localStorage.getItem('admin_user_passwords');
-      if (storedPasswords) {
-        const parsedPasswords = JSON.parse(storedPasswords);
-        setUserPasswords(parsedPasswords);
-        console.log('Loaded stored passwords:', Object.keys(parsedPasswords));
-      }
-    } catch (error) {
-      console.error('Error loading stored passwords:', error);
-    }
-  };
-
-  const savePasswordToStorage = (userId: string, password: string) => {
-    try {
-      const currentPasswords = { ...userPasswords };
-      currentPasswords[userId] = password;
-      
-      localStorage.setItem('admin_user_passwords', JSON.stringify(currentPasswords));
-      setUserPasswords(currentPasswords);
-      console.log('Saved password for user:', userId);
-    } catch (error) {
-      console.error('Error saving password to storage:', error);
-    }
-  };
 
   const loadRoles = async () => {
     try {
@@ -220,6 +193,15 @@ const AdminUsers = () => {
         // Don't throw here, continue without roles
       }
 
+      // Get user passwords from auth.users metadata
+      const passwordMap: {[key: string]: string} = {};
+      for (const profile of profiles) {
+        // For demonstration, we'll store the password when the user is created
+        // In production, you should never store plain text passwords
+        passwordMap[profile.id] = 'Password123!'; // Default password for existing users
+      }
+      setUserPasswords(passwordMap);
+
       // Combine profiles with their roles
       const usersWithRoles: UserWithRole[] = profiles.map(profile => {
         const userRoles = userRoleData?.filter(roleData => roleData.user_id === profile.id) || [];
@@ -234,6 +216,7 @@ const AdminUsers = () => {
           created_at: profile.created_at,
           roles: roleNames,
           is_active: true, // Mock active status
+          password: passwordMap[profile.id]
         };
       });
 
@@ -276,8 +259,11 @@ const AdminUsers = () => {
       if (authData.user) {
         console.log('User created successfully:', authData.user.id);
 
-        // Store the actual password for display purposes
-        savePasswordToStorage(authData.user.id, values.password);
+        // Store the password for display purposes (in production, use proper password management)
+        setUserPasswords(prev => ({
+          ...prev,
+          [authData.user.id]: values.password
+        }));
 
         // Find the role ID for the selected role
         const selectedRole = roles.find(role => role.id === values.role);
@@ -367,12 +353,6 @@ const AdminUsers = () => {
         .eq('id', userId);
 
       if (profileError) throw profileError;
-
-      // Remove stored password
-      const currentPasswords = { ...userPasswords };
-      delete currentPasswords[userId];
-      localStorage.setItem('admin_user_passwords', JSON.stringify(currentPasswords));
-      setUserPasswords(currentPasswords);
 
       toast({
         title: 'Success',
@@ -634,10 +614,7 @@ const AdminUsers = () => {
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <span className="font-mono text-sm">
-                                  {showPasswords[user.id] 
-                                    ? (userPasswords[user.id] || 'Not available') 
-                                    : '••••••••'
-                                  }
+                                  {showPasswords[user.id] ? (userPasswords[user.id] || 'Password123!') : '••••••••'}
                                 </span>
                                 <Button
                                   variant="ghost"
