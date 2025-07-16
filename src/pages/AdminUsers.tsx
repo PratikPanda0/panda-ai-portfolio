@@ -20,9 +20,7 @@ const userSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.enum(['admin', 'moderator', 'user'], {
-    required_error: 'Please select a role',
-  }),
+  role: z.string().min(1, 'Please select a role'),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
@@ -38,8 +36,15 @@ interface UserWithRole {
   password?: string;
 }
 
+interface Role {
+  id: string;
+  name: string;
+  description: string;
+}
+
 const AdminUsers = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({});
@@ -55,7 +60,7 @@ const AdminUsers = () => {
       lastName: '',
       email: '',
       password: '',
-      role: 'user',
+      role: '',
     },
   });
 
@@ -75,6 +80,8 @@ const AdminUsers = () => {
           return;
         }
 
+        // Load roles first
+        await loadRoles();
         // Get current user's roles
         await getCurrentUserRoles();
         // Load users
@@ -92,18 +99,53 @@ const AdminUsers = () => {
     initializePage();
   }, [navigate, toast]);
 
+  const loadRoles = async () => {
+    try {
+      console.log('Loading roles...');
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('roles')
+        .select('*')
+        .order('name');
+
+      console.log('Roles query result:', { rolesData, rolesError });
+
+      if (rolesError) {
+        console.error('Roles error:', rolesError);
+        throw rolesError;
+      }
+
+      setRoles(rolesData || []);
+      console.log('Loaded roles:', rolesData);
+    } catch (error) {
+      console.error('Error loading roles:', error);
+    }
+  };
+
   const getCurrentUserRoles = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: userRoles } = await supabase
+        console.log('Getting roles for current user:', user.id);
+        
+        const { data: userRoleData, error: userRoleError } = await supabase
           .from('user_roles')
-          .select('role')
+          .select(`
+            roles (
+              name
+            )
+          `)
           .eq('user_id', user.id);
         
-        const roles = userRoles?.map(role => role.role) || [];
-        setCurrentUserRoles(roles);
-        console.log('Current user roles:', roles);
+        console.log('Current user roles query result:', { userRoleData, userRoleError });
+        
+        if (userRoleError) {
+          console.error('Error fetching current user roles:', userRoleError);
+          return;
+        }
+        
+        const roleNames = userRoleData?.map(item => item.roles?.name).filter(Boolean) || [];
+        setCurrentUserRoles(roleNames);
+        console.log('Current user roles:', roleNames);
       }
     } catch (error) {
       console.error('Error getting current user roles:', error);
@@ -134,15 +176,20 @@ const AdminUsers = () => {
         return;
       }
 
-      // Get all user roles
-      const { data: userRoles, error: rolesError } = await supabase
+      // Get all user roles with role names using the new structure
+      const { data: userRoleData, error: userRoleError } = await supabase
         .from('user_roles')
-        .select('user_id, role');
+        .select(`
+          user_id,
+          roles (
+            name
+          )
+        `);
 
-      console.log('User roles query result:', { userRoles, rolesError });
+      console.log('User roles query result:', { userRoleData, userRoleError });
 
-      if (rolesError) {
-        console.error('Roles error:', rolesError);
+      if (userRoleError) {
+        console.error('User roles error:', userRoleError);
         // Don't throw here, continue without roles
       }
 
@@ -157,15 +204,17 @@ const AdminUsers = () => {
 
       // Combine profiles with their roles
       const usersWithRoles: UserWithRole[] = profiles.map(profile => {
-        const roles = userRoles?.filter(role => role.user_id === profile.id).map(role => role.role) || [];
-        console.log(`Profile ${profile.id} (${profile.email}) has roles:`, roles);
+        const userRoles = userRoleData?.filter(roleData => roleData.user_id === profile.id) || [];
+        const roleNames = userRoles.map(roleData => roleData.roles?.name).filter(Boolean) as string[];
+        
+        console.log(`Profile ${profile.id} (${profile.email}) has roles:`, roleNames);
         return {
           id: profile.id,
           first_name: profile.first_name,
           last_name: profile.last_name,
           email: profile.email,
           created_at: profile.created_at,
-          roles,
+          roles: roleNames,
           is_active: true, // Mock active status
           password: passwordMap[profile.id]
         };
@@ -216,12 +265,18 @@ const AdminUsers = () => {
           [authData.user.id]: values.password
         }));
 
-        // Assign role to the new user
+        // Find the role ID for the selected role
+        const selectedRole = roles.find(role => role.id === values.role);
+        if (!selectedRole) {
+          throw new Error('Selected role not found');
+        }
+
+        // Assign role to the new user using role ID
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
             user_id: authData.user.id,
-            role: values.role,
+            role_id: values.role,
             assigned_by: null
           });
 
@@ -234,7 +289,7 @@ const AdminUsers = () => {
 
         toast({
           title: 'Success',
-          description: `${values.role} user created successfully`,
+          description: `${selectedRole.name} user created successfully`,
         });
 
         form.reset();
@@ -460,9 +515,23 @@ const AdminUsers = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="moderator">Moderator</SelectItem>
-                              <SelectItem value="user">User</SelectItem>
+                              {roles
+                                .filter(role => {
+                                  // Only super_admin can create other super_admins
+                                  if (role.name === 'super_admin') {
+                                    return isSuperAdmin;
+                                  }
+                                  // Admin can create admin, moderator, and user
+                                  if (currentUserRoles.includes('admin')) {
+                                    return ['admin', 'moderator', 'user'].includes(role.name);
+                                  }
+                                  return true;
+                                })
+                                .map(role => (
+                                  <SelectItem key={role.id} value={role.id}>
+                                    {role.name.replace('_', ' ')}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
