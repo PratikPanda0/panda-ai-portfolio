@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -82,30 +83,41 @@ const Admin = () => {
         console.log('Supabase auth result:', { authData, authError });
 
         if (!authError && authData.user) {
-          // Check if the authenticated user has admin role
+          // Check if the authenticated user has admin role using the new structure
           const { data: userRoles, error: roleError } = await supabase
             .from('user_roles')
-            .select('role')
-            .eq('user_id', authData.user.id)
-            .eq('role', 'admin')
-            .maybeSingle();
+            .select(`
+              roles (
+                name
+              )
+            `)
+            .eq('user_id', authData.user.id);
 
           console.log('User role check:', { userRoles, roleError });
 
-          if (userRoles && userRoles.role === 'admin') {
-            // User is authenticated and has admin role
-            localStorage.setItem('admin_token', 'admin_logged_in');
-            setIsLoggedIn(true);
-            toast({
-              title: 'Login successful',
-              description: 'Welcome to the admin panel',
-            });
-            console.log('Login successful via Supabase Auth');
-            return;
+          if (userRoles && userRoles.length > 0) {
+            const roleNames = userRoles.map(item => item.roles?.name).filter(Boolean);
+            const hasAdminRole = roleNames.includes('admin') || roleNames.includes('super_admin');
+            
+            if (hasAdminRole) {
+              // User is authenticated and has admin role
+              localStorage.setItem('admin_token', 'admin_logged_in');
+              setIsLoggedIn(true);
+              toast({
+                title: 'Login successful',
+                description: 'Welcome to the admin panel',
+              });
+              console.log('Login successful via Supabase Auth');
+              return;
+            } else {
+              // User authenticated but doesn't have admin role
+              await supabase.auth.signOut();
+              throw new Error('Access denied: Admin privileges required');
+            }
           } else {
-            // User authenticated but doesn't have admin role
+            // No roles found for this user
             await supabase.auth.signOut();
-            throw new Error('Access denied: Admin privileges required');
+            throw new Error('Access denied: No admin privileges found');
           }
         }
       } catch (supabaseError) {
