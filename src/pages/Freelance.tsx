@@ -13,6 +13,7 @@ interface Project {
   ProjDesc: string;
   ProjURL: string;
   ProjImg: string;
+  tags: string[];
 }
 
 const Freelance = () => {
@@ -27,56 +28,64 @@ const Freelance = () => {
       ProjName: "Priya Legal Portfolio",
       ProjDesc: "A personal legal portfolio website for my client.",
       ProjURL: "https://priyabanerjee.in/",
-      ProjImg: "/images/freelancing/priya-legal-portfolio.png"
+      ProjImg: "/images/freelancing/priya-legal-portfolio.png",
+      tags: ["Live Project", "Client"]
     },
     {
       ProjID: genUniqueProjID(),
       ProjName: "GEOSTRATACONSULTANCY PRIVATE LIMITED",
       ProjDesc: "GeoStrata Consultancy Private Limited is a multidisciplinary enterprise driven by expertise, innovation, and integrity.",
       ProjURL: "https://geostrata.org/",
-      ProjImg: "/images/freelancing/geostrata.png"
+      ProjImg: "/images/freelancing/geostrata.png",
+      tags: ["Live Project", "Client"]
     },
     {
       ProjID: genUniqueProjID(),
       ProjName: "E-Commerce Platform",
       ProjDesc: "Modern e-commerce solution with React, Node.js, and Stripe integration. Features include product catalog, shopping cart, and secure payment processing.",
       ProjURL: "https://example-ecommerce.com",
-      ProjImg: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop"
+      ProjImg: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop",
+      tags: ["Live Project", "Client"]
     },
     {
       ProjID: genUniqueProjID(),
       ProjName: "Portfolio Website",
       ProjDesc: "Responsive portfolio website built with React and TypeScript. Features smooth animations, dark mode, and optimized performance.",
       ProjURL: "https://example-portfolio.com",
-      ProjImg: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=600&fit=crop"
+      ProjImg: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=600&fit=crop",
+      tags: ["Live Project", "Client"]
     },
     {
       ProjID: genUniqueProjID(),
       ProjName: "Task Management App",
       ProjDesc: "Full-stack task management application with real-time updates, team collaboration, and project tracking capabilities.",
-      ProjURL: "https://example-taskapp.com",
-      ProjImg: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&h=600&fit=crop"
+      ProjURL: "",
+      ProjImg: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&h=600&fit=crop",
+      tags: ["Dev Env", "Internal"]
     },
     {
       ProjID: genUniqueProjID(),
       ProjName: "Restaurant Website",
       ProjDesc: "Modern restaurant website with online reservation system, menu display, and location integration. Built with responsive design principles.",
       ProjURL: "https://example-restaurant.com",
-      ProjImg: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop"
+      ProjImg: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop",
+      tags: ["Live Project", "Client"]
     },
     {
       ProjID: genUniqueProjID(),
       ProjName: "Fitness Tracking App",
       ProjDesc: "Mobile-first fitness application with workout tracking, progress analytics, and social features. Integrated with health APIs.",
-      ProjURL: "https://example-fitness.com",
-      ProjImg: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&h=600&fit=crop"
+      ProjURL: "",
+      ProjImg: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&h=600&fit=crop",
+      tags: ["Dev Env", "Internal"]
     },
     {
       ProjID: genUniqueProjID(),
       ProjName: "Real Estate Platform",
       ProjDesc: "Comprehensive real estate platform with property listings, virtual tours, and mortgage calculator. Features advanced search and filtering.",
       ProjURL: "https://example-realestate.com",
-      ProjImg: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop"
+      ProjImg: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop",
+      tags: ["Live Project", "Client"]
     }
   ]);
 
@@ -127,7 +136,7 @@ const Freelance = () => {
             {filteredProjects.map((project, index) => (
               <Card 
                 key={project.ProjID}
-                className="className='w-full max-w-md p-3 glass-effect border border-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-dev-primary/40 transition'"
+                className="group hover:shadow-lg hover:shadow-dev-primary/20 transition-all duration-300 hover:-translate-y-2 glass-effect animate-fade-in h-full flex flex-col"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {/* Project Image */}
@@ -157,22 +166,46 @@ const Freelance = () => {
                     </p>
                   </div>
 
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {project.tags.map((tag, i) => (
+                      <Badge 
+                        key={i}
+                        variant="secondary" 
+                        className="font-mono text-xs bg-dev-primary/10 text-dev-primary border-dev-primary/20"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+
                   <div className="flex items-center justify-between mt-auto">
-                    <Badge 
-                      variant="secondary" 
-                      className="font-mono text-xs bg-dev-primary/10 text-dev-primary border-dev-primary/20"
-                    >
-                      Live Project
-                    </Badge>
-                    
-                    <Button
-                      onClick={() => handleProjectClick(project.ProjURL)}
-                      size="sm"
-                      className="bg-dev-primary hover:bg-dev-primary/90 text-white shadow-md hover:shadow-lg transition-all duration-200 group/btn"
-                    >
-                      <span className="mr-2">View</span>
-                      <ExternalLink className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-                    </Button>
+                    {project.ProjURL ? (
+                      <>
+                        <Badge 
+                          variant="secondary" 
+                          className="font-mono text-xs bg-green-500/10 text-green-500 border-green-500/20"
+                        >
+                          Live
+                        </Badge>
+                        
+                        <Button
+                          onClick={() => handleProjectClick(project.ProjURL)}
+                          size="sm"
+                          className="bg-dev-primary hover:bg-dev-primary/90 text-white shadow-md hover:shadow-lg transition-all duration-200 group/btn"
+                        >
+                          <span className="mr-2">View</span>
+                          <ExternalLink className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+                        </Button>
+                      </>
+                    ) : (
+                      <Badge 
+                        variant="outline"
+                        className="font-mono text-xs bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
+                      >
+                        Dev Env
+                      </Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>
