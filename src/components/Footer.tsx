@@ -19,7 +19,7 @@ const Footer = () => {
     },
     {
       icon: <Mail className="h-5 w-5" />,
-      href: "mailto:pratik.panda@gmail.com",
+      href: "mailto:contactus@pratikpanda.in",
       label: "Email"
     }
   ];
@@ -68,7 +68,7 @@ const Footer = () => {
             <div className="font-mono text-sm text-muted-foreground">
               <div className="text-dev-primary">const contact = {'{'};</div>
               <div className="pl-2">
-                email: <span className="text-dev-accent">"pratik.panda@gmail.com"</span>,
+                email: <span className="text-dev-accent">"contactus@pratikpanda.in"</span>,
               </div>
               <div className="pl-2">
                 location: <span className="text-dev-accent">"Hyderabad, India"</span>
