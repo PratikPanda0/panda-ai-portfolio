@@ -26,7 +26,7 @@ const Freelance = () => {
     {
       ProjID: genUniqueProjID(),
       ProjName: "Priya Legal Portfolio",
-      ProjDesc: "A personal legal portfolio website for my client.",
+      ProjDesc: "A personal legal portfolio website for my client who works in High Court of Calcutta.",
       ProjURL: "https://priyabanerjee.in/",
       ProjImg: "/images/freelancing/priya-legal-portfolio.png",
       tags: ["Live Project", "Client"]
@@ -41,52 +41,52 @@ const Freelance = () => {
     },
     {
       ProjID: genUniqueProjID(),
-      ProjName: "E-Commerce Platform",
+      ProjName: "Juris-Smart",
+      ProjDesc: "Streamline your legal workflow with smart contract drafting, document analysis, and AI-driven legal advice. Save time and reduce costs with JurisSmart.",
+      ProjURL: "https://juris-smart-assist.vercel.app/",
+      ProjImg: "/images/freelancing/juris-smart.png",
+      tags: ["Live Project", "Internal"]
+    },
+    {
+      ProjID: genUniqueProjID(),
+      ProjName: "DairyDelight E-Commerce Platform",
       ProjDesc: "Modern e-commerce solution with React, Node.js, and Stripe integration. Features include product catalog, shopping cart, and secure payment processing.",
-      ProjURL: "https://example-ecommerce.com",
-      ProjImg: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop",
-      tags: ["Live Project", "Client"]
+      ProjURL: "https://dairy-delight-amber.vercel.app/",
+      ProjImg: "/images/freelancing/dairydelight.png",
+      tags: ["Live Project", "Client", "POC"]
     },
-    {
-      ProjID: genUniqueProjID(),
-      ProjName: "Portfolio Website",
-      ProjDesc: "Responsive portfolio website built with React and TypeScript. Features smooth animations, dark mode, and optimized performance.",
-      ProjURL: "https://example-portfolio.com",
-      ProjImg: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=600&fit=crop",
-      tags: ["Live Project", "Client"]
-    },
-    {
-      ProjID: genUniqueProjID(),
-      ProjName: "Task Management App",
-      ProjDesc: "Full-stack task management application with real-time updates, team collaboration, and project tracking capabilities.",
-      ProjURL: "",
-      ProjImg: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&h=600&fit=crop",
-      tags: ["Dev Env", "Internal"]
-    },
-    {
-      ProjID: genUniqueProjID(),
-      ProjName: "Restaurant Website",
-      ProjDesc: "Modern restaurant website with online reservation system, menu display, and location integration. Built with responsive design principles.",
-      ProjURL: "https://example-restaurant.com",
-      ProjImg: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop",
-      tags: ["Live Project", "Client"]
-    },
-    {
-      ProjID: genUniqueProjID(),
-      ProjName: "Fitness Tracking App",
-      ProjDesc: "Mobile-first fitness application with workout tracking, progress analytics, and social features. Integrated with health APIs.",
-      ProjURL: "",
-      ProjImg: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&h=600&fit=crop",
-      tags: ["Dev Env", "Internal"]
-    },
-    {
-      ProjID: genUniqueProjID(),
-      ProjName: "Real Estate Platform",
-      ProjDesc: "Comprehensive real estate platform with property listings, virtual tours, and mortgage calculator. Features advanced search and filtering.",
-      ProjURL: "https://example-realestate.com",
-      ProjImg: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop",
-      tags: ["Live Project", "Client"]
-    }
+    // {
+    //   ProjID: genUniqueProjID(),
+    //   ProjName: "Portfolio Website",
+    //   ProjDesc: "Responsive portfolio website built with React and TypeScript. Features smooth animations, dark mode, and optimized performance.",
+    //   ProjURL: "https://example-portfolio.com",
+    //   ProjImg: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=600&fit=crop",
+    //   tags: ["Live Project", "Client"]
+    // },
+    // {
+    //   ProjID: genUniqueProjID(),
+    //   ProjName: "Restaurant Website",
+    //   ProjDesc: "Modern restaurant website with online reservation system, menu display, and location integration. Built with responsive design principles.",
+    //   ProjURL: "https://example-restaurant.com",
+    //   ProjImg: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop",
+    //   tags: ["Live Project", "Client"]
+    // },
+    // {
+    //   ProjID: genUniqueProjID(),
+    //   ProjName: "Fitness Tracking App",
+    //   ProjDesc: "Mobile-first fitness application with workout tracking, progress analytics, and social features. Integrated with health APIs.",
+    //   ProjURL: "",
+    //   ProjImg: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&h=600&fit=crop",
+    //   tags: ["Dev Env", "Internal"]
+    // },
+    // {
+    //   ProjID: genUniqueProjID(),
+    //   ProjName: "Real Estate Platform",
+    //   ProjDesc: "Comprehensive real estate platform with property listings, virtual tours, and mortgage calculator. Features advanced search and filtering.",
+    //   ProjURL: "https://example-realestate.com",
+    //   ProjImg: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop",
+    //   tags: ["Live Project", "Client"]
+    // }
   ]);
 
   const handleProjectClick = (url: string) => {
